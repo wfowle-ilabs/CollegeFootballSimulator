@@ -1,0 +1,95 @@
+/*-- scss:defaults --*/
+// College Football Simulator — light theme
+// "Stadium" palette: deep field green primary, warm pigskin accent.
+
+$primary:        #1b6b3a;   // field green
+$secondary:      #2f3e46;   // slate
+$success:        #1b6b3a;
+$info:           #2c6e9b;
+$warning:        #c8881a;   // pigskin / leather
+$danger:         #b3261e;
+
+$body-color:     #1c2128;
+$link-color:     #1b6b3a;
+$link-hover-color: darken($link-color, 12%);
+
+// Typography — system stacks (no external font fetch, works offline)
+$font-family-sans-serif: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+$font-family-monospace: "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+$headings-font-weight: 650;
+
+$border-radius: 0.5rem;
+
+/*-- scss:rules --*/
+
+// Subtle gridiron accent on the navbar bottom edge
+.navbar {
+  border-bottom: 3px solid #{$warning};
+}
+
+// Headings get a little more presence
+h1, .h1 { letter-spacing: -0.01em; }
+h2, .h2 {
+  border-bottom: 2px solid rgba($primary, 0.18);
+  padding-bottom: 0.25rem;
+  margin-top: 2.25rem;
+}
+
+// Blockquotes read as "design notes"
+blockquote {
+  border-left: 4px solid #{$primary};
+  background: rgba($primary, 0.05);
+  padding: 0.6rem 1rem;
+  border-radius: 0 $border-radius $border-radius 0;
+}
+
+// Tables: zebra + tidy header
+table {
+  font-size: 0.95rem;
+}
+thead th {
+  background: rgba($primary, 0.10);
+  border-bottom: 2px solid rgba($primary, 0.35) !important;
+}
+
+// Code blocks (the ASCII diagrams) — keep them crisp and contained
+pre {
+  border: 1px solid rgba($secondary, 0.18);
+  border-radius: $border-radius;
+  background: #f7f9f7;
+}
+
+// Home-page hero
+.hero {
+  padding: 2.5rem 0 1rem;
+  border-bottom: 1px solid rgba($secondary, 0.12);
+  margin-bottom: 1.5rem;
+}
+.hero .tagline {
+  font-size: 1.15rem;
+  color: rgba($body-color, 0.75);
+  max-width: 46rem;
+}
+
+// Card grid on the home page
+.doc-card {
+  display: block;
+  border: 1px solid rgba($secondary, 0.16);
+  border-radius: $border-radius;
+  padding: 1.1rem 1.25rem;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.doc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border-color: rgba($primary, 0.5);
+  text-decoration: none;
+}
+.doc-card .doc-card-title {
+  font-weight: 700;
+  color: #{$primary};
+  margin-bottom: 0.35rem;
+}

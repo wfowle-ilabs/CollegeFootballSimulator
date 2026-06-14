@@ -1,0 +1,52 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "College Football Simulator"
+  description: "Design documentation for a Godot/C# college football season simulator."
+  reader-mode: true
+  page-navigation: true
+  navbar:
+    background: primary
+    pinned: true
+    left:
+      - href: index.qmd
+        text: Home
+      - href: architecture.qmd
+        text: Architecture
+      - href: goals.qmd
+        text: v1 Goals
+    right:
+      - icon: github
+        href: https://github.com/
+        aria-label: GitHub
+  sidebar:
+    style: docked
+    search: true
+    collapse-level: 2
+    contents:
+      - text: "Home"
+        href: index.qmd
+      - section: "Design"
+        contents:
+          - architecture.qmd
+          - goals.qmd
+      - section: "Reference"
+        contents:
+          - decisions.qmd
+  page-footer:
+    center: "College Football Simulator — design docs · built with Quarto"
+
+format:
+  html:
+    theme:
+      light: [cosmo, theme.scss]
+      dark: [darkly, theme-dark.scss]
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    number-sections: true
+    code-copy: true
+    smooth-scroll: true
+    anchor-sections: true

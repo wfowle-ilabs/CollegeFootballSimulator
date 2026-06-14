@@ -1,0 +1,68 @@
+---
+title: "College Football Simulator"
+subtitle: "Design documentation"
+number-sections: false
+toc: false
+---
+
+::: {.hero}
+A single-player **college football season simulator** built in **Godot 4.6.3** with **C# / .NET**.
+You pick an FBS team, set your gameplan and depth chart, and simulate a full season — regular
+season, conference championships, and the complete CFP — to a national champion.
+
+::: {.tagline}
+Outcomes aren't formulas with noise bolted on. Every contested play resolves as a
+**d20 check against a Difficulty Class**, against players and coaches described by
+*Baldur's Gate III*-style attribute sheets — **no traditional "overall" ratings**.
+:::
+:::
+
+## Start here
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-4}
+::: {.doc-card}
+[**🏛️ Architecture**](architecture.qmd){.doc-card-title}
+
+How the world is modeled and how a game is simulated — the d20/DC engine, the attribute
+system, the institutional hierarchy, the class/data model, and the save system.
+:::
+:::
+
+::: {.g-col-12 .g-col-md-4}
+::: {.doc-card}
+[**🎯 v1 Goals**](goals.qmd){.doc-card-title}
+
+What v1 must do, what it deliberately won't, the Definition of Done, and the
+milestone-by-milestone build order from engine to playable shell.
+:::
+:::
+
+::: {.g-col-12 .g-col-md-4}
+::: {.doc-card}
+[**📌 Decisions Log**](decisions.qmd){.doc-card-title}
+
+The locked, high-level decisions that anchor everything else — engine, language,
+simulation depth, dice system, and v1 scope.
+:::
+:::
+
+:::
+
+## The shape of v1 {#sec-shape}
+
+| | |
+|---|---|
+| **Engine / language** | Godot 4.6.3 · C# / .NET |
+| **Simulated** | FBS (FBS-IAA) only — full current scheduling + the complete CFP |
+| **Game fidelity** | Play-by-play (every down), with a **quick-sim** fast path |
+| **Resolution** | d20 + attribute modifier vs. Difficulty Class (crits on 20, blunders on 1) |
+| **Ratings** | Attribute & skill sheets (BG3-style) — no "overall" |
+| **v1 scope** | In-season only: start a save → pick a team → sim the season → crown a champion |
+| **User control** | Sim & watch (set scheme + depth chart, watch the sim resolve) |
+| **Media** | In-game ESPN-style site: weekly recaps, Featured tab, team lookup — event-driven, templated in v1 (pluggable on-device LLM later) |
+| **Architecture** | Event-driven: the sim emits domain events; UI, stats, and media subscribe |
+
+> These docs are **living documents**. They capture the plan we build against and evolve as the
+> design firms up. See the [Decisions Log](decisions.qmd) for what's locked vs. still open.

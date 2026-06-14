@@ -1,0 +1,346 @@
+---
+title: "Architecture"
+subtitle: "College Football Simulator — v1"
+---
+
+::: {.callout-note appearance="simple"}
+**Status:** Living design document.
+**Engine:** Godot 4.6.3 · **Language:** C# / .NET · **Genre:** Single-player season-management simulation.
+:::
+
+## Design Philosophy {#sec-philosophy}
+
+Three principles drive every decision below.
+
+1. **Simulation over presentation (for v1).** The engine is the product. The UI exists to start a save, configure a team, and watch outcomes. We build a correct, observable simulation core first; polish comes later.
+2. **No "overall" rating — character sheets, not star ratings.** Players, coaches, and staff are described by **attributes** and **skills** the way a *Baldur's Gate III* character is. A player is not "an 87 OVR"; he is a bundle of numbers (Strength 14, Awareness 11, Route Running 16…) that produce emergent results. This makes development, scheme fit, and matchups *fall out of the math* rather than being hand-tuned.
+3. **Outcomes are dice, not formulas with noise bolted on.** Every contested event resolves as a **d20 check against a Difficulty Class (DC)** modified by attributes. The randomness is the design, not a fudge factor. This keeps results legible ("he failed the block check, DL won the rep") and tunable.
+
+## What We Simulate vs. What We Don't {#sec-scope}
+
+This boundary is the most important thing in this document. Everything in "Out" is deliberately deferred so v1 can ship.
+
+### ✅ In scope (v1)
+
+| Area | Detail |
+|---|---|
+| **League** | FBS (a.k.a. FBS-IAA) only — all conferences, all teams. |
+| **Scheduling** | The real current scheduling structure: conference + non-conference games, conference championship games. |
+| **Postseason** | The full **CFP** slate (current format: 12-team bracket with byes, plus the bowl/championship structure feeding it). |
+| **Games** | **Play-by-play** simulation — every down: down & distance, play call, d20 resolution, yardage, clock, scoring, turnovers, penalties, special teams. |
+| **Players** | Full active rosters with BG3-style attributes/skills, position, year, depth-chart slot, fatigue, in-game/season injury state. |
+| **Coaches & Staff** | Head coach + coordinators (+ position coaches as ratings) described by attributes that bias scheme, play-calling tendencies, and player development. |
+| **Stats** | Per-play → per-game box scores → season aggregates (team & individual), standings, rankings. |
+| **User team** | Pick one team in a conference; set scheme/gameplan and depth chart pre-game; **sim & watch**. |
+| **Game speed (watch vs. quick sim)** | Two presentation modes over the *same* engine: **watch** (play-by-play log + live box score) and **quick sim** (instant final score + box score, play log discarded). The user may quick-sim any game, including their own. **Non-player fixtures default to quick sim** (a whole week's other games resolve instantly). |
+| **World hierarchy** | The full institutional pyramid (Division → Conference → University → Athletics Dept → Team) exists as data, even where v1 only puts behavior on the Team — see @sec-world. |
+| **Media & narratives** | An in-game **ESPN-style site** (Media menu): weekly recaps, season storylines, a **Featured** tab, and lookup for *any* team. Built on an event-driven pipeline; v1 ships **deterministic, templated** articles with a *pluggable* local-LLM writer that drops in behind the same interface — see @sec-media. |
+| **Save/Load** | Persist a full save (league state mid-season) and resume. |
+
+### ❌ Out of scope (v1 — deferred to later versions)
+
+| Area | Why deferred |
+|---|---|
+| **Recruiting** | Large standalone system (prospects, offers, visits, commitments). v2. |
+| **Transfer portal** | Depends on offseason loop & player valuation. Post-v1. |
+| **Coaching carousel** | Hiring/firing/poaching, contracts. Post-v1. |
+| **Offseason / multi-season progression** | v1 is a single in-season experience start→champion. Player development *exists* as attributes but the offseason loop that ages/develops rosters is v2. |
+| **Sub-FBS levels** (FCS, D-II, D-III, NAIA, JUCO/community college) | Architecture must *allow* it (see @sec-forward-compat), but v1 ships FBS only. |
+| **Live play-calling / coach-mode input during games** | v1 is sim-and-watch. The engine is built so play-calling *could* be injected later, but the user does not call plays in v1. |
+| **3D/2D field visualization** | v1 presents games as text/log + evolving box score. No animated field. |
+| **Spectator mode** (watch *non-player* games play-by-play) | Non-player games are quick-simmed in v1. Watching another team's game unfold play-by-play comes later — and because quick-sim already runs the full engine, it's a presentation toggle (retain the play log), not an engine change. |
+| **Conference economy** (TV deals → budgets → NIL/recruiting/facilities) | The world hierarchy that carries it exists in v1 (@sec-world), but the money flow is v2+. |
+| **On-device LLM narrative writer** | The Media pipeline + templated articles ship in v1; the local ~7B/GGUF writer (LLamaSharp) is pluggable behind `INarrativeGenerator` and lands once model size/perf/quality are validated — see @sec-media. |
+| **Online / multiplayer / dynasty sharing** | Not considered for v1. |
+
+## World Hierarchy & Ownership Model {#sec-world}
+
+College football is not just teams and games — it's an institutional pyramid where money and membership flow downward and results flow upward. Modeling this hierarchy correctly in v1 (even where most levels are thin) is what makes the v1→v2 leap possible: v2's economy (TV deals → budgets → NIL, recruiting, facilities) bolts directly onto this skeleton instead of forcing a restructure.
+
+### The ownership pyramid {#sec-pyramid}
+
+```
+Division                     ── e.g. FBS (FBS-IAA). The competitive tier.
+└─ Conference                ── membership group; negotiates media rights.
+   ├─ TV / Media Deal        ── owned by the conference; distributes revenue to members.
+   └─ University   (member)  ── the institution.
+      └─ Athletics Department── holds the budget; runs all sports.
+         └─ Team  (football) ── the football program — what we play & sim.
+            ├─ Roster (Players)
+            ├─ Coaches & Staff
+            └─ Depth chart / scheme
+```
+
+Two distinct relationships live here, and keeping them separate is what makes realignment and economics clean later:
+
+- **Containment / ownership (downward):** Division → Conference → University → Athletics Department → Team → Roster. The literal tree of who-owns-what.
+- **Membership (sideways):** a University (via its Team) *belongs to* a Conference for competition and revenue-sharing. Conference realignment = re-pointing this membership edge without touching the ownership chain.
+
+The **TV/Media Deal hangs off the Conference, not the Team** — deliberate and true to life: conferences sell media rights collectively and distribute to members through their athletics departments.
+
+### What each level holds — v1 vs. later
+
+| Level | v1 (modeled now) | Later (v2+) |
+|---|---|---|
+| **Division** (FBS-IAA) | Identity, its set of conferences, postseason/CFP rules. | Other divisions (FCS→JUCO); multi-division play. |
+| **Conference** | Members, divisions/pods, scheduling rules, tiebreakers, championship-game config, auto-bid logic. | Realignment, expansion, **TV deal negotiation**. |
+| **TV / Media Deal** | *Stub* attached to each conference (nominal value field, unused by sim). | Real contracts: value, term, distribution formula → feeds AD budgets. |
+| **University** | Identity (name, location, brand, prestige). | Enrollment, academics affecting recruiting, brand growth. |
+| **Athletics Department** | *Thin*: owns the football Team, carries a budget field (unused by v1 sim). | **Budget** from media/tickets/donors → allocates to NIL pool, recruiting spend, facility/stadium projects, coaching salaries. |
+| **Team** (football) | Fully modeled: roster, staff, depth chart, scheme, record — the unit we simulate. | NIL spending, facility ratings affecting development, recruiting pitch. |
+
+> **Principle:** v1 builds the *whole tree* but only puts behavior on **Team** (and the game engine). Division/Conference get the structural logic they need for scheduling & postseason; University/AthleticsDepartment/TVDeal exist as data shells with the fields v2 will animate. Nothing in v1 has to be torn down to add the economy.
+
+### The future economic flow (v2+, sketched now so v1 doesn't block it)
+
+```
+Conference negotiates TV/Media Deal
+        │  (revenue distribution)
+        ▼
+Athletics Department budget  ◀── + ticket sales, donors, NCAA/bowl payouts
+        │  (allocation)
+        ├─► NIL pool          ─► recruiting & transfer-portal competitiveness
+        ├─► Recruiting spend   ─► prospect reach & evaluation
+        ├─► Facilities/Stadium ─► player development, gameday advantage, revenue
+        └─► Coaching salaries  ─► hiring/retaining better coach attribute sheets
+```
+
+This is **not in v1**, but every box maps to an entity in @sec-pyramid — so v2 is *populating fields and adding services*, not restructuring the world.
+
+## The Resolution System (d20 + DC) {#sec-resolution}
+
+The beating heart of the engine. A single, reusable check resolves every contested football event.
+
+### The check
+
+```
+roll  = d20  (1–20)
+total = roll + attributeModifier + situationalModifiers
+result:
+    roll == 20            → CRITICAL SUCCESS   (best-case outcome, ignores DC)
+    roll == 1             → CRITICAL FAILURE   (blunder: fumble, sack, blown coverage)
+    total >= DC           → SUCCESS
+    total <  DC           → FAILURE
+margin = total - DC       (used to scale magnitude, e.g. yards gained)
+```
+
+- **Attribute modifier:** derived from the relevant attribute(s) (see @sec-attributes). BG3-style: `mod = floor((attr - 10) / 2)` is our starting curve, but we keep this in one tunable function so we can reshape it.
+- **DC:** set by the *opposing* unit/player's relevant attributes plus situation. A run block is `OL.RunBlock` checked against a DC derived from `DL.BlockShed`.
+- **Advantage / Disadvantage:** roll 2d20, take higher (advantage) or lower (disadvantage). Granted by scheme fit, coaching edges, momentum, home crowd, fatigue mismatches. This is how we express "edges" without inflating raw numbers.
+- **Margin scales magnitude.** Beating a DC by 1 ≠ beating it by 12. A run play's yardage, a pass's air yards, all scale off `margin` through a transfer curve.
+
+### Determinism & reproducibility
+
+All randomness flows through a **single seeded `RandomNumberGenerator`** owned by the simulation context. Same save + same seed + same inputs ⇒ identical game. Essential for debugging, save integrity, and "replay this game" later. We **never** call `GD.Randi()` / global RNG inside sim logic.
+
+### Why this and not probability tables
+
+A play-by-play d20 engine gives us legible, debuggable outcomes ("OL_LeftGuard failed RunBlock check vs DT, DC 16, rolled 7+4=11 → penetration, RB tackled for -2") and a uniform mechanic across blocking, coverage, tackling, kicking, and decision-making. Tuning happens in *modifier curves* and *DC tables*, isolated from the dice.
+
+## Simulation Layers (top-down) {#sec-layers}
+
+The sim is a nest of loops, each layer producing events the layer below resolves. Each layer is its own service so it can be tested in isolation.
+
+```
+SeasonSimulator
+  └─ for each week:
+       WeekSimulator
+         └─ for each scheduled game:
+              GameSimulator                      ← clock, score, possession, weather
+                └─ DriveSimulator                ← field position, drive state
+                     └─ PlaySimulator            ← chooses play, runs the play
+                          ├─ PlayCaller          ← offense/defense pick plays (coach attrs + situation)
+                          └─ PlayResolver        ← d20 checks → yards / TO / score / penalty
+                               └─ CheckResolver  ← the d20-vs-DC primitive
+  └─ after regular season: ConferenceChampionships → CFPBracket → bowls → Champion
+  └─ after each week: update stats, standings, rankings, injuries, fatigue recovery
+```
+
+Key idea: **PlayResolver composes many CheckResolver calls.** A single pass play might resolve: protection (OL vs DL checks) → QB decision (Awareness check) → throw (Accuracy vs DC from distance/coverage) → catch (Catching vs DC from coverage/contact) → YAC (Agility vs Tackling). Each is one d20 check; the play outcome is their composition.
+
+## Event-Driven Architecture & Side Effects {#sec-events}
+
+Game modules don't reach into each other's side effects. The simulation **emits typed domain events**, and independent subscribers react. This keeps the sim core ignorant of presentation, media, stats, and everything else — they're all just listeners.
+
+- **Producers:** the simulators emit domain events as things happen — `GameConcluded`, `WeekAdvanced`, `UpsetOccurred`, `RankingsUpdated`, `PlayerInjured`, `RecordBroken`, `SeasonConcluded`.
+- **Bus:** `EventBus` (autoload) dispatches events to subscribers (typed C# events / Godot signals).
+- **Consumers (side effects):** the **Media & Narrative subsystem** (@sec-media) is the flagship consumer; stats aggregation, standings/rankings refresh, injury bookkeeping, and — later — achievements, awards watches, and recruiting buzz all hang off the same events.
+
+Two rules keep this clean:
+
+1. **Events are facts, not commands.** A producer announces *what happened*; it never knows who listens. Adding a new consumer means *subscribing*, not editing the sim.
+2. **Consumers never mutate state the sim depends on.** Side effects are strictly downstream. The deterministic core (sim + seeded RNG) is the single source of truth; consumers read events and produce their *own* artifacts (articles, stat tables, UI updates). This is exactly what lets non-deterministic work like LLM text generation live in the system without breaking "same seed ⇒ same season."
+
+Consumers may also process events **asynchronously on worker threads** (e.g. narrative generation between weeks), so advancing the season never blocks on a side effect.
+
+```
+SeasonSimulator / GameSimulator ──emit──▶ EventBus
+                                            │  (GameConcluded, WeekAdvanced, UpsetOccurred …)
+                ┌──────────────┬────────────┴───────────┬──────────────────┐
+                ▼              ▼                         ▼                  ▼
+         StatAggregator   RankingService          MediaSubsystem      (future: awards,
+                                                  (async / threaded)   achievements, buzz)
+```
+
+## Media & Narrative Subsystem {#sec-media}
+
+An **in-game ESPN-style site** for immersion: weekly recaps, season storylines, a **Featured** tab, and the ability to look up **your team or any other team** and read its coverage. It is pure presentation — a consumer of @sec-events, derived from deterministic `GameResult` data.
+
+**Pipeline (between weeks, in the background):**
+
+1. `WeekAdvanced` / `GameConcluded` events land on the `EventBus`.
+2. `MediaSubsystem` builds a **`NarrativeContext`** per story — the facts a writer needs: final score, key plays, standout stat lines, standings/ranking implications, streaks, rivalry/upset flags.
+3. A **tiering pass** decides coverage and article type (game recap, upset alert, ranking shake-up, season storyline).
+4. The chosen `INarrativeGenerator` turns each `NarrativeContext` into a `NewsArticle`.
+5. Articles are written to the **sidecar media cache** and surfaced in the Media menu.
+
+Steps 2–5 run **off the main thread**, kicked off when a week concludes, so the player can keep advancing; articles stream into the Media menu as they finish.
+
+**Coverage tiering** (quality-per-compute; scales to ~65 games/week): featured / Top-25 / rivalry / upset / user-team games get **full articles**; everything else gets a **short templated recap + box score**. The Featured tab surfaces the week's biggest stories.
+
+**Pluggable generation — `INarrativeGenerator`:**
+
+- `TemplateNarrativeGenerator` — **v1 baseline.** Deterministic, instant, no model dependency; fills authored templates from the `NarrativeContext`. Always available, and the fallback for low-tier games.
+- `LlmNarrativeGenerator` — **drop-in upgrade.** A small local model (~7B) via **LLamaSharp** loading a bundled **GGUF**, fully on-device (no 3rd-party API, no per-call cost). It's handed a constrained **"script"**: a structured prompt that injects the `NarrativeContext` facts and dictates format/length/tone, so a small model stays factual and on-brand. Slots in behind the same interface with zero changes elsewhere.
+
+This mirrors the `PlayCaller`-as-interface pattern (@sec-forward-compat): the consumer is stable; the implementation swaps.
+
+**Determinism boundary.** Articles are *artifacts*, never inputs — regenerating one can't change a score or a standing. Persisting them (below) also means a reloaded save shows the *same* text the player first read.
+
+**Storage — sidecar media cache.** Articles persist in a per-save media store separate from the core `SaveGame` (e.g. `user://saves/<slot>.media`), keyed by week + team + article id. It survives reload, lets the user re-read past coverage, and keeps the core save lean.
+
+## Attribute & Skill Model (BG3-inspired) {#sec-attributes}
+
+No overall rating. A `Player` carries **core attributes** (broad, slow-changing, BG3's six-stat analog) and **position skills** (specific, what actually gets checked on a play).
+
+### Core attributes (every player has these)
+
+Working set — to be finalized in a dedicated attributes reference:
+
+- **Strength** — power blocking, breaking/making tackles, press.
+- **Agility** — change of direction, route breaks, shedding.
+- **Speed** — straight-line; gates breakaways and pursuit.
+- **Awareness** — football IQ; reads, audibles, coverage recognition, penalty avoidance.
+- **Durability** — injury-resistance & fatigue curve (not a per-play check; modifies injury/fatigue rolls).
+- **Composure** — performance under pressure (late game, hostile crowd, big stage); affects advantage/disadvantage.
+
+### Position skills (subset relevant per position)
+
+Examples (full matrix → attributes reference):
+
+- QB: ThrowPower, ShortAccuracy, DeepAccuracy, PlayAction, Scramble, ReadProgression.
+- RB: Vision, Elusiveness, Trucking, BallSecurity, PassBlock, Receiving.
+- WR/TE: RouteRunning, Catching, ContestedCatch, Release, RunBlock (TE).
+- OL: RunBlock, PassBlock, PullSpeed, AnchorStrength.
+- DL/EDGE: BlockShed, PassRush, RunStop, Pursuit.
+- LB: Coverage, RunStop, Blitz, Tackling.
+- DB: ManCoverage, ZoneCoverage, BallSkills, PressTechnique, Tackling.
+- ST: KickPower, KickAccuracy, PuntPower, Returns.
+
+A check looks up the *relevant skill* (or a blend of skill + core attribute) for both participants and resolves through the system in @sec-resolution.
+
+### Coaches & staff
+
+Coaches are character sheets too — no "overall." Attributes such as: **OffensiveAcumen, DefensiveAcumen, PlayCalling (aggression/tendency), Development (per-position growth bias), Discipline (penalty rate), GameManagement (clock/timeouts/4th-down), Recruiting (stubbed for v1), Motivation (Composure/advantage buffs)**. Coach attributes feed the **PlayCaller** (what plays get chosen) and grant **advantage/disadvantage** at the check layer, rather than directly editing player numbers mid-game.
+
+### Derived vs. stored
+
+We store *attributes*. We *derive* any "rating-like" number on demand (e.g. a scouting view) from attributes through a position-weighted function — never the reverse. This keeps the BG3 ethos intact and means a "rating" is just one lens on the sheet.
+
+## Data Model — Core Classes {#sec-data-model}
+
+In Godot+C#, the persistent data model is built from **custom `Resource` types** (`[GlobalClass] public partial class X : Resource`). Resources serialize cleanly via `ResourceSaver`/`ResourceLoader`, show in the editor inspector, and are the idiomatic Godot way to hold game data. Pure-logic services (simulators) are **plain C# classes**, not nodes — they take data in and return results, keeping them unit-testable without the scene tree.
+
+```
+Resource (data — serialized)
+├─ Player              : attributes, skills, position, class/year, depth slot,
+│                         fatigue, injury status, season + career stat lines
+├─ Coach               : role (HC/OC/DC), attributes, tendencies
+├─ StaffMember         : trainers/specialists as attribute bundles (lightweight in v1)
+├─ Team                : identity (name, abbr, colors, venue, prestige),
+│                         roster (Player[]), staff, depth chart, scheme/gameplan, record
+├─ AthleticsDepartment : owns the Team; budget field (thin in v1 — see World Hierarchy)
+├─ University          : institution identity/brand; owns its AthleticsDepartment
+├─ TVDeal              : media-rights stub attached to a Conference (thin in v1)
+├─ Conference          : member universities/teams, divisions/pods, tiebreak rules,
+│                         champ-game config, TVDeal
+├─ Division            : competitive tier (FBS for v1); member conferences, postseason/CFP rules
+├─ League              : root world container (holds the FBS Division in v1)
+├─ Schedule            : weeks → list of Matchup (home, away, site, week, type)
+├─ GameResult          : final score, box score, play log (empty when quick-simmed), key events
+├─ Season              : year, current week, Schedule, standings, rankings, postseason state
+└─ SaveGame            : League + Season + user team id + RNG seed/state + settings
+
+Plain C# (logic — not serialized)
+├─ SeasonSimulator / WeekSimulator / GameSimulator / DriveSimulator / PlaySimulator
+├─ PlayCaller (offense + defense)
+├─ PlayResolver
+├─ CheckResolver           ← the d20-vs-DC primitive
+├─ RankingService, StandingsService, TiebreakService
+├─ CfpBracketBuilder, ScheduleBuilder
+├─ StatAggregator
+├─ EventBus + typed domain events (GameConcluded, WeekAdvanced, UpsetOccurred, …)
+└─ MediaSubsystem + INarrativeGenerator (TemplateNarrativeGenerator | LlmNarrativeGenerator)
+```
+
+> **C# serialization note:** Fields meant to persist must be Godot-visible — use `[Export]` properties and Godot collection types (`Godot.Collections.Array<T>`, `Godot.Collections.Dictionary`) on `Resource` subclasses, since plain `List<T>`/.NET dictionaries don't serialize through `ResourceSaver`. Confirmed against Godot 4.6 docs.
+
+> **Media types** (see @sec-media): `NewsArticle : Resource` (headline, body, type, week, team refs, timestamp) lives in the per-save **sidecar media cache**, *not* the core `SaveGame` graph. The `EventBus`, domain events, `MediaSubsystem`, and `INarrativeGenerator` (`TemplateNarrativeGenerator` / `LlmNarrativeGenerator`) are plain C#.
+
+## Save System {#sec-save}
+
+- **Primary approach:** the entire game state is a `SaveGame : Resource` graph. Save = `ResourceSaver.Save(saveGame, "user://saves/slot1.tres")` (or `.res` binary for size/speed); load = `ResourceLoader.Load`. Godot 4.6's resource system is built exactly for "custom resource types that store game data."
+- **RNG state is part of the save** so a resumed save continues deterministically.
+- **Versioning:** `SaveGame` carries a `schemaVersion` int so we can migrate old saves as the model evolves.
+- We are **not** using the node-group `save()`/JSON-line pattern from the Godot docs — that suits scene-tree-resident state; our model is data Resources, which `ResourceSaver` handles directly and more robustly.
+
+## Project Structure & Runtime Composition {#sec-structure}
+
+```
+/docs              ← Quarto design-doc site (this site: architecture, goals, decisions)
+/data              ← .tres data assets: teams, conferences, schedule templates
+/src
+  /Model           ← Resource subclasses (the data model)
+  /Sim             ← simulators, PlayCaller, resolvers (plain C#)
+  /Services        ← rankings, standings, tiebreaks, CFP, scheduling, stats
+  /Save            ← save/load + migration
+  /UI              ← scenes/scripts: menus, team select, season hub, game viewer
+/tests             ← C# unit tests for Sim/Services (headless)
+project.godot
+```
+
+**Autoload singletons (Godot autoloads):**
+
+- `GameManager` — owns the active `SaveGame`, current screen flow, new-game/continue.
+- `SimDriver` — bridges UI requests ("sim this week", "sim to end of season") to the plain-C# simulators and surfaces results/events.
+- `EventBus` — the domain-event hub (@sec-events). Simulators emit typed events; UI, stats, rankings, and the Media subsystem all subscribe — the sim never knows who listens.
+- `MediaSubsystem` — listens for game/week events and generates narratives on a **background thread** into the sidecar media cache, feeding the Media menu (@sec-media).
+
+The simulators themselves stay out of the scene tree — autoloads are thin coordinators that own data and call into pure logic.
+
+## Forward-Compatibility Hooks (so v2+ doesn't require a rewrite) {#sec-forward-compat}
+
+We don't *build* these in v1, but the architecture must not preclude them:
+
+- **The full world hierarchy already exists** (@sec-world) — Division/Conference/University/AthleticsDepartment/Team — so adding FCS→JUCO is new *data*, and the v2 economy (TV deals → budgets → NIL/recruiting/facilities) is new *services on existing entities*, not a restructure.
+- **PlayCaller is an interface** — a `UserPlayCaller` can replace the AI for the user's team later (live play-calling) without touching `PlayResolver`.
+- **The same play-by-play engine backs both watch and quick-sim** (quick-sim just discards the play log), so spectator mode for non-player games is later a UI toggle to retain that log, not a new engine.
+- **The event-driven core (@sec-events) is open for new consumers** — achievements, awards watches, social-media buzz, recruiting interest — which *subscribe* to existing events rather than touching the sim.
+- **`INarrativeGenerator` lets the on-device LLM writer replace the templated baseline** (@sec-media) with no changes anywhere else.
+- **Offseason loop slot** — `SeasonSimulator` ends by handing state to a (currently no-op) offseason stage where recruiting/portal/carousel will live.
+- **Player has career history + class/year already**, so progression/aging plugs in at the offseason stage.
+- **Everything resolves through `CheckResolver`**, so balance changes are localized to modifier/DC curves.
+
+## Open Questions (to resolve before/while building) {#sec-open-questions}
+
+1. **Exact attribute & skill list** — needs its own attributes reference and the position→skill matrix + the `attr → modifier` and `margin → yards` curves.
+2. **Play catalog** — how granular is the playbook? (formations + concepts vs. abstract "run inside / play-action deep" buckets). Affects PlayCaller complexity.
+3. **Clock & game-flow fidelity** — real play-clock/game-clock model, quarter length scaling, hurry-up/2-minute logic.
+4. **Penalties & special teams depth** for v1.
+5. **Data sourcing** — where do real FBS teams/conferences/rosters come from, and how are starting attributes generated for ~130 teams' worth of players?
+6. **CFP format specifics** — pin the exact current bracket/seeding/bye rules and conference-champ auto-bids.
+7. **Quick-sim performance** — confirm full-engine quick-sim of a whole week (~65 games) is fast enough, or whether an abstracted fast path is needed.
+8. **Local-LLM specifics** — which ~7B model, quantization/size vs. quality, GGUF licensing for redistribution, and the per-week background-generation time budget.
+9. **Narrative "script" design** — the structured prompt/template per article type, and hallucination guardrails that constrain the model to `NarrativeContext` facts.
+
+These are tracked as the next design passes; none block agreeing on the architecture above.
