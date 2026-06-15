@@ -12,6 +12,7 @@ public sealed class MediaPage : Page
     private ItemList _headlines = null!;
     private Label _body = null!;
     private readonly List<NewsArticle> _shown = new();
+    private readonly List<(int Year, int Week)> _weeks = new();
 
     public override string Title => "Media";
 
@@ -21,7 +22,19 @@ public sealed class MediaPage : Page
 
         var controls = Ui.HBox(12);
         _week = new OptionButton();
-        foreach (int w in Nav.Game.Media.WeeksWithCoverage(Nav.Game.Year)) _week.AddItem($"Week {w}", w);
+        // List every week that actually has coverage (across all years), so a year-stamp
+        // mismatch can't hide articles that the headlines strip is already showing.
+        _weeks.Clear();
+        _weeks.AddRange(Nav.Game.Media.Articles
+            .Select(a => (a.Year, a.Week))
+            .Distinct()
+            .OrderBy(x => x.Year).ThenBy(x => x.Week));
+        for (int i = 0; i < _weeks.Count; i++)
+        {
+            (int year, int week) = _weeks[i];
+            string label = year == Nav.Game.Year ? $"Week {week}" : $"{year} · Week {week}";
+            _week.AddItem(label, i);
+        }
         if (_week.ItemCount == 0) _week.AddItem("No coverage yet", -1);
         _week.Selected = _week.ItemCount - 1;
         _week.ItemSelected += _ => RefreshHeadlines();
@@ -56,11 +69,12 @@ public sealed class MediaPage : Page
         _headlines.Clear();
         _shown.Clear();
         _body.Text = "";
-        int week = _week.GetSelectedId();
+        int idx = _week.GetSelectedId();
         int teamFilter = _team.GetSelectedId();
-        if (week < 0) return;
+        if (idx < 0 || idx >= _weeks.Count) return;
+        (int year, int week) = _weeks[idx];
 
-        foreach (NewsArticle a in Nav.Game.Media.ForWeek(Nav.Game.Year, week))
+        foreach (NewsArticle a in Nav.Game.Media.ForWeek(year, week))
         {
             if (teamFilter != -1 && !a.TeamIds.Contains(teamFilter)) continue;
             _headlines.AddItem($"{(a.Full ? "★ " : "   ")}{a.Headline}");

@@ -112,6 +112,7 @@ Each milestone is independently demonstrable and builds on the last.
 
 ## Beyond v1 (roadmap sketch) {#sec-roadmap}
 
+- **v1.1 — SimCast & playstyle identity:** a *simulation broadcast* of your team's game (tabbed gamecast, drive-by-drive play-by-play, speed-controlled, real **college clock**, no 3D); a pre-game **gameplan** the AI caller honors (personnel, usage, reads, QB archetype, tempo, aggression); a real **playbook of formations + concepts** with **offensive & defensive schemes** and **coach attributes** wired in, so all ~130 teams play distinctly; real **stadiums** + simulated **attendance** that drives **home-field advantage** (and seeds the future ticket → NIL economy). Lays the `IPlayCaller` + **Playcaller / Jump-In** seam for the later 3D live play-calling mode. See the [v1.1 design](v1_1.qmd).
 - **v2 — Recruiting & development:** replace walk-on replenishment with a real recruiting cycle; richer player progression/aging in the (already-present) offseason.
 - **v3 — Movement:** transfer portal, coaching carousel, contracts.
 - **v4 — Expansion downward:** FCS, D-II, D-III, NAIA, JUCO/community colleges as additional leagues/levels.

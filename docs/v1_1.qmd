@@ -1,0 +1,291 @@
+---
+title: "v1.1 — SimCast & Playstyle Identity"
+subtitle: "Watch your team play, your way"
+---
+
+::: {.callout-note appearance="simple"}
+**Status:** Design spec for the **v1.1** overhaul. Builds directly on the [Architecture](architecture.qmd) forward-compat hooks (PlayCaller-as-interface, watch-vs-quick-sim as a presentation toggle, coach attributes feeding play-calling). The d20 check primitive in [Mechanics](mechanics.qmd) is **unchanged** — v1.1 changes what gets *composed* into a play and how the result is *presented*, not the dice.
+:::
+
+## What v1.1 is {#sec-what}
+
+v1 ships a believable, fully-simulated season you advance and read about. v1.1 makes a game **something you watch and shape**:
+
+1. **SimCast** — a *simulation broadcast* of your team's game. Not the 3D field (that's later); a paced, legible, ESPN-style play-by-play you watch at a chosen speed, with the real rhythm of a football game (huddles, tempo changes, timeouts, TV breaks, the two-minute drill).
+2. **Gameplan** — you set scheme, personnel, usage, reads, tempo, and aggression **before kickoff**; the AI play-caller honors it; you watch it play out. The knobs are real and they change the box score.
+3. **Playstyle identity** — a real **playbook of formations and concepts**, **offensive and defensive schemes**, and **coach attributes** wired into play-calling so all ~130 teams play *distinctly*. Air Raid under an aggressive coordinator should look nothing like a smashmouth option team — on both sides of the ball.
+4. **Atmosphere** — every program plays in a real **stadium** with a simulated **crowd**. Attendance is immersion (the broadcast shows the gate), a **home-field edge** in the sim (a loud house tilts the dice), *and* the first real driver of the future ticket → NIL economy.
+
+> The v1.1 north star: **"Hit Play Game → SimCast, and watch *your* gameplan unfold in a real stadium against an opponent who has an identity of its own."**
+
+This refines two v1 decisions ([Decisions log](decisions.qmd)): *"sim & watch, no live play-calling"* becomes *sim & watch a **gameplan** you authored* (still no live per-play input in SimCast), and *"play catalog granularity"* (open question #2) resolves toward a **real playbook of formations + concepts**.
+
+## Play Game — the game-day entry point {#sec-playmatch}
+
+On your team's game day, the matchup gets a **Play Game** dropdown with three options:
+
+| Option | Behavior |
+|---|---|
+| **Playcaller** *(grayed out in v1.1)* | The **3D gameday play-calling mode** — you call every play from kickoff. The mode itself is later; the button and the `IPlayCaller` seam ship now. See @sec-jumpin. |
+| **SimCast** | Watch the simulation broadcast — the v1.1 build (@sec-simcast). |
+| **Quick Sim** | Instant final + box score (today's behavior; the timeline is still built so the game is reviewable play-by-play). |
+
+Non-user games are always quick-simmed (the whole week resolves instantly), exactly as v1 — SimCast/Playcaller are presentation choices over the *same* engine, so nothing about the sim changes based on how you watch.
+
+> **Jump-In** is *not* a Play Game option — it lives **inside SimCast**: while a broadcast is running you can *jump into the ongoing match* and take the play-calling over yourself (it hands off to Playcaller mid-game). Also grayed out in v1.1. See @sec-jumpin.
+
+## SimCast — the broadcast {#sec-simcast}
+
+SimCast is **pure presentation**. The engine produces a deterministic game; SimCast *plays it back*. This keeps "same seed ⇒ same game" intact while the user scrubs speed.
+
+It's not one scrolling log — it's a **game-presentation hub with tabs**, modeled on an ESPN gamecast. A persistent header carries the **scoreboard, game clock, quarter, down & distance, ball-on, possession, timeouts**, the **speed control** (`0.5× / 1× / 2× / 4× / Instant`), and a (disabled) **Jump-In** button (@sec-jumpin).
+
+| Tab | What it is |
+|---|---|
+| **Gamecast** | The *live* view: play-by-play streaming in real time as the clock runs, with light **commentary** ("3rd & 4 — they're in hurry-up…", "BLOCKED!"). The pauses are rendered, not skipped (@sec-clock). This is the thing you actually *watch*. |
+| **Play-by-Play** | The structured history: **each drive is an object** — a collapsible card with its summary (`Touchdown · 7 plays, 83 yds, 4:05`) that expands to the individual plays. Mirrors the shared ESPN layout. Filter: All / Scoring / Key plays. |
+| **Box Score** | Per-team passing / rushing / receiving / defense / **returns** / kicking / punting — the existing `BoxScorePage`, now updating live. |
+| **Team Stats** | The team-comparison grid: 1st downs, 3rd/4th-down efficiency, total yards, yards/play, penalties, turnovers, time of possession. |
+| **Game Info** | Stadium, location, **attendance**, weather, network (@sec-stadiums). |
+
+Speed only changes the *playback cadence*; it never touches the RNG or the outcome. Quick Sim lands you straight on the final Box Score, but the timeline is still built — so a quick-simmed game is reviewable play-by-play (the architecture's spectator-mode hook).
+
+### The structured game timeline {#sec-timeline}
+
+The foundation for all of the above (and the thing the current engine lacks). Today the sim emits a `List<string>` play log; v1.1 emits a **typed, drive-grouped timeline** every tab reads from.
+
+```
+GameTimeline
+└─ Drive[]                 ← a possession: team, start/end field pos, result, plays, yards, time of poss
+   └─ Segment[]            ← ordered; each carries a clock stamp + a real-time "broadcast duration"
+      ├─ Snap              ← a play: call (formation+concept), participants, the check chain, the result
+      ├─ Pause             ← huddle / sub / timeout / TV timeout / 2-min / injury / measurement
+      ├─ Score             ← TD / FG / XP / 2-pt / safety / return TD (the beats to emphasize)
+      └─ PossessionChange  ← punt / turnover / downs / kickoff (with returns)
+```
+
+- **Drives are first-class** — that's what the Play-by-Play tab renders as cards, and what a drive chart summarizes. (Today drives are simulated but not retained as objects.)
+- The timeline is computed by the sim, deterministically. The **string play log becomes a derived view** of it, so logs, box scores, drive cards, and the Gamecast all read one source.
+- **Broadcast duration** per segment is a presentation hint (a sack lingers, a hurry-up snap is quick); the chosen speed multiplies it. It is *not* the football clock — that's the game-clock runoff on each `Snap`/`Pause` (@sec-clock).
+
+## Clock & pacing fidelity {#sec-clock}
+
+The "pauses in the record" require a real game-flow model. Today `GameClock` is an elapsed-seconds counter with fixed per-play runoff and no stoppages ([deferred at M2](architecture.qmd)). v1.1 makes it faithful to **college** rules — which differ from the NFL in two ways that matter:
+
+::: {.callout-note appearance="simple"}
+**College clock rules we model (current NCAA):**
+
+- **First down, in bounds → clock keeps running.** Since the 2023 rule change, gaining a first down *no longer* stops the clock — **except** inside the last two minutes of a half, where a first down stops it. (This is the big NFL difference and it speeds college games up.)
+- **Two-minute timeout (new in 2024).** The clock stops at **2:00 in the 2nd and 4th quarters** — a built-in stoppage, not a TV timeout.
+- **Incomplete pass → clock stops** until the next snap.
+- **Out of bounds → clock stops**, then restarts on the **ready-for-play** signal — **except** inside the last two minutes of a half, where it stays stopped until the **snap**.
+- **Change of possession** (punt / turnover / downs) and **penalty** → clock stops, restarts on the ready signal.
+- **Score → clock stops** for the try (XP/2-pt) and the kickoff.
+- **Play clock** 40s (25s after administrative stoppages); the pre-snap burn is where **tempo** lives.
+:::
+
+On top of the stop rules:
+
+| Element | Model |
+|---|---|
+| **Per-play runoff** | Pre-snap burn (tempo) + the play's duration. **Huddle** = normal; **no-huddle/hurry-up** = minimal pre-snap burn; **bleed-clock** = milk the play clock to ~:01. |
+| **Timeouts** | 3 per half per team; spent by **game-management logic** (stop the clock trailing late, ice a kicker, avoid delay-of-game), driven by coach **GameManagement**. |
+| **TV timeouts** | Inserted at quarter breaks and after some changes of possession — the broadcast rhythm (separate from the 2-minute stop). |
+| **Two-minute drill** | End-of-half behavior: hurry-up, get-out-of-bounds, spikes, clock awareness — gated by score + time + coach. |
+| **Tempo as identity** | A team's *default* tempo is part of its scheme/gameplan (Air Raid pushes pace; smashmouth bleeds it), so pacing itself differentiates teams. |
+
+Each stoppage becomes a `Pause` (or a runoff annotation on a `Snap`) in the timeline, so the Gamecast renders the rhythm and the football clock stays honest. Clock realism is what makes a comeback drive feel real — the difference between college and NFL clock math is the difference between a team having time and not.
+
+## Gameplan — the deterministic control surface {#sec-gameplan}
+
+The knobs. You set these **pre-game**; the AI caller honors them; they are part of the deterministic inputs (same gameplan + seed ⇒ same game). For non-user teams, an AI sets a gameplan from the team's scheme, coach, and roster.
+
+| Knob | What it controls |
+|---|---|
+| **Scheme** | The team's playbook + identity on each side of the ball (@sec-schemes). |
+| **Personnel / on-field** | Which players are in for a given personnel grouping (pulls from the depth chart per formation). |
+| **Carry share** | How carries split across the RB room (feature back vs. committee). |
+| **Target share** | How looks split across receivers (a true #1 vs. spread-it-around). |
+| **Read order** | The **1st / 2nd / 3rd reads** in the pass game (target priority within a concept). |
+| **QB archetype** | **Pocket passer** (dropback, climbs the pocket) vs. **dual-threat** (designed QB runs, scramble, RPO pull) — changes the run/pass surface and the scramble branch. |
+| **Tempo** | Default pace + situational (hurry-up when trailing, bleed when leading). |
+| **Aggression** | 4th-down go-for-it tendency, deep-shot rate, blitz rate (defense) — a baseline the coach modulates. |
+
+The depth chart (today just "starter ordering") grows a thin **usage layer**: per-position role slots + the shares above. Promotion still works; usage is the new dimension.
+
+## Schemes & the playbook {#sec-schemes}
+
+v1.1 commits to a **real playbook of formations and concepts** (open question #2, resolved). The d20 chain is unchanged; concepts decide *which* checks compose and with what modifiers.
+
+### The three tiers
+
+```
+Formation   ← personnel + alignment  (who's on the field, where)
+   └─ Concept   ← the play             (what they run)
+        └─ Check chain  ← from Mechanics — the d20 resolution, with concept-specific modifiers
+```
+
+**Offensive formations (sample):** Shotgun Spread (11), Singleback, I-Form, Pistol, Empty, Goal-line (heavy).
+**Offensive concepts (sample):**
+
+| Family | Concepts |
+|---|---|
+| Run | Inside Zone, Outside Zone, Power, Counter, Draw, QB Read/Option, Jet Sweep |
+| Pass | Four Verts, Mesh, Smash, Flood, Slant-Flat, Screen (RB/bubble), Play-Action Shot |
+| RPO | Zone-read + bubble / slant / glance (a single snap with a read that resolves run *or* quick throw) |
+
+**Defensive fronts (sample):** 4-3, 3-4, Nickel, Dime, 46/Bear, Goal-line.
+**Defensive concepts (sample):** Cover 1 (man-free), Cover 2, Cover 3, Cover 4 (quarters), Cover 0 blitz, zone blitz, stunt/base. A call = **front + coverage + pressure**.
+
+### A scheme is a weighted playbook
+
+A **Scheme** is a *distribution over formations + concepts* plus identity modifiers:
+
+- **Air Raid** → heavy Shotgun/Empty; pass-weighted (Mesh, Verts, RPO); fast tempo; deep-shot lean.
+- **Spread-RPO** → Shotgun/Pistol; balanced run/pass via RPO; up-tempo.
+- **Pro-Style** → multiple personnel; balanced, play-action-heavy; pocket QB lean.
+- **Smashmouth / Power** → I-Form/Singleback; Power/Counter/PA; slow tempo.
+- **Option** → Pistol/Flexbone; zone-read/option/QB run; dual-threat QB.
+
+Defensive schemes mirror this: **4-3 base**, **3-4 multiple**, **nickel/dime pass-D**, **man-press aggressive**, **bend-don't-break zone** — each a distribution over fronts/coverages/pressures with a blitz-rate identity.
+
+### Read progression & QB archetype {#sec-reads}
+
+A pass concept carries an **ordered list of route options** mapped to receiver roles (X / Z / slot / TE / RB) — the read order from the gameplan. On the snap:
+
+1. The protection check sets a **pressure clock** (OL vs. rush).
+2. The QB works the progression: **read 1** vs. its defender → if covered, **read 2** → **read 3**, each gated by QB `ReadProgression` + `Awareness` and shrinking pocket time.
+3. **Dual-threat** QBs branch to **scramble** when the pocket breaks or reads are covered (and own the designed-run / RPO-pull concepts); **pocket passers** climb and check it down.
+
+This is exactly the "1st / 2nd / 3rd reads, dual-threat vs pocket" surface — emergent from the concept × archetype × coverage matchup.
+
+## Coaching styles {#sec-coaches}
+
+The `Coach` attribute sheet already exists ([Architecture](architecture.qmd)) and is **unused** by the sim today. v1.1 wires it in:
+
+| Attribute | Effect |
+|---|---|
+| **PlayCalling** (aggression/tendency) | Shifts the scheme distribution toward aggressive concepts; raises 4th-down go / deep-shot / blitz rates. |
+| **OffensiveAcumen / DefensiveAcumen** | Grant **advantage** on the matchup when the call out-schemes the opponent; sharpen situational selection. |
+| **GameManagement** | Drives clock/timeout decisions (@sec-clock) — when to burn a timeout, ice a kicker, go hurry-up. |
+| **Motivation** | Composure/advantage buffs in big spots (already the architecture's intent). |
+
+A team's identity is the **product**: `Scheme × Coach × Personnel × Gameplan`. That product is what makes 130 teams distinct rather than 130 copies with different rosters.
+
+## Stadiums & atmosphere {#sec-stadiums}
+
+Every team gets a home **stadium**. v1.1 scope is **location + capacity** (the environment) — not the deferred economy plumbing.
+
+- **`Stadium`** — name, city, state, **capacity** (room later for surface, elevation, year built). It hangs off the program's venue identity (and moves to the University / Athletics Department once the [economy](architecture.qmd#sec-world) arrives — referenced by ID either way).
+- **Data fill** — assign each of the ~130 FBS programs its real home stadium (name / city / capacity), a one-time addition to `FbsLeagueData` alongside the existing team/conference/prestige data.
+
+The SimCast **Game Info** panel surfaces stadium, city, **attendance**, and network — the ESPN "Game Information" card.
+
+## Attendance simulation {#sec-attendance}
+
+Attendance isn't flavor — it's a **sim input** and the first real driver of the future economy.
+
+**What drives the gate** (a deterministic function, like everything else in the sim):
+
+- Stadium **capacity** — the ceiling.
+- Home **prestige** + **record** — winners draw.
+- **Opponent** quality / ranking and **rivalry** — a ranked rival packs the house; a cupcake doesn't.
+- **Time of season** + day/time **slot** — a November primetime conference game ≠ a Week 1 noon tune-up.
+- *(Later: weather, TV window.)*
+
+→ yields an **attendance** number and a **% of capacity** — "how loud is it."
+
+**Effect on the sim — home-field advantage.** The engine has *no* HFA today; this adds it. Crowd strength (% of capacity) **tilts the dice** through the existing advantage system ([Mechanics](mechanics.qmd)) — the architecture's "home crowd grants advantage," finally real:
+
+- The **road offense** feels it most: pre-snap communication / false-start risk and `Composure` checks on third down, in the red zone, and in the **fourth quarter** of a close game.
+- It **scales with % of capacity** (a half-empty stadium is no edge; a sold-out night game is) and is **dampened by** the road team's `Composure`.
+- It is a **deterministic input**: same matchup + seed ⇒ same crowd ⇒ same edge.
+
+**The economic hook (seam now, flow later).** Attendance → **ticket revenue** → **Athletics Department budget** → *(v2)* **NIL / facilities / staff**. v1.1 introduces attendance + HFA; the money flow stays in the [v2 economy](architecture.qmd#sec-world), but this is the input it consumes. Empty stadium → weak gate → no NIL → hard to stay competitive: the loop starts here.
+
+## The `IPlayCaller` seam {#sec-playcaller}
+
+Today `PlayCaller` is a static class with one `passBias` knob. v1.1 makes it the documented interface:
+
+```{mermaid}
+flowchart LR
+  subgraph INPUTS
+    SCH[Scheme<br/>weighted playbook]
+    COA[Coach attrs]
+    GP[Gameplan<br/>usage / reads / tempo / aggression]
+    SIT[Situation<br/>down·dist·field·score·clock]
+  end
+  INPUTS --> PC{{IPlayCaller}}
+  PC -->|picks formation + concept| PR[PlayResolver<br/>concept → check chain]
+  PR -->|Snap + checks| TL[GameTimeline]
+  TL --> SC[SimCast broadcast]
+  TL --> BOX[Box score / stats]
+```
+
+- **`AiPlayCaller`** composes `Scheme × Coach × Gameplan × Situation` → a concrete call. Both the user team (honoring the user's gameplan) and every AI team use it.
+- **`UserPlayCaller`** is the seam left for **Jump-In** (@sec-jumpin) — a future implementation that takes calls from a human mid-game. Not built in v1.1; the interface and the disabled button are.
+- `PlayResolver` gains **concept dispatch**: each concept declares which checks it runs and its modifiers, composed from the same `CheckResolver` primitive.
+
+## Determinism boundary {#sec-determinism}
+
+Unchanged in principle, explicit for the new pieces:
+
+- **Gameplan + scheme + coach are deterministic inputs.** Same save + seed + gameplans ⇒ identical game. The gameplan joins the seed as part of the reproducible state.
+- **Attendance & home-field advantage are deterministic inputs too.** The gate is a function of the matchup; the crowd edge it produces is computed before kickoff and feeds the dice the same way every replay. Crowd affects the *sim*; it is not presentation.
+- **SimCast speed and all broadcast pacing are pure presentation.** They read the already-computed timeline; they never call the RNG. Scrubbing speed, pausing, or replaying cannot change a single yard.
+- **The timeline is an artifact**, like media articles — derived from the deterministic game, never an input to it.
+
+## Forward hook — Playcaller & Jump-In {#sec-jumpin}
+
+The eventual **3D gameday play-calling mode** (where you stop watching and *call the plays*) has **two entry points**, and v1.1 lays the seam for both so the later mode bolts on without a rewrite:
+
+- **Playcaller** — from the **Play Game** dropdown: enter the mode at kickoff and call every play. (Grayed out in v1.1.)
+- **Jump-In** — a control **inside SimCast**: while the broadcast runs, *jump into the ongoing match* and take the calls over from there. (Grayed out in v1.1.)
+
+Both resolve to the same thing under the hood:
+
+- The **`IPlayCaller` interface** — a `UserPlayCaller` drops in for the user team in place of `AiPlayCaller` (@sec-playcaller).
+- The framing that SimCast and live-calling are **two presentations over one engine** — watching vs. driving — so "jump in" mid-game just **swaps the user team's caller**, it doesn't change the sim.
+
+The 3D rendering and the live play-calling UX themselves remain **out of scope** (later than v1.1); v1.1 ships the interface and the two disabled buttons.
+
+## Phasing {#sec-phasing}
+
+Each phase is independently demoable.
+
+### P1 — SimCast + pacing + atmosphere
+- The **`GameTimeline`** (drives → segments) + the string log as a derived view.
+- The **college clock/pacing model**: tempo runoff, the college stop rules, timeouts (coach-driven), TV timeouts, two-minute timeout.
+- **Stadiums** (data fill) + **attendance** + **home-field advantage** wired into the dice.
+- The **SimCast hub**: header (scoreboard/clock/**speed**/disabled Jump-In) + tabs **Gamecast / Play-by-Play (drive cards) / Box Score / Team Stats / Game Info**; the **Play Game** dropdown (Playcaller-disabled / SimCast / Quick Sim).
+- *Demo:* Play Game → SimCast, watch a real, paced game in a real stadium at 1× / 2× / instant, then drill the Play-by-Play drives.
+
+### P2 — Gameplan + usage knobs
+- The **`Gameplan`** model + the depth-chart **usage layer** (carry/target share, read order, personnel).
+- The **`IPlayCaller`** refactor (`AiPlayCaller`); resolver **usage-weighting**; **QB archetype** + **read progression**.
+- Gameplan editor UI for the user team.
+- *Demo:* author a gameplan (feature back, true #1 receiver, dual-threat QB) and watch the box score reflect it in SimCast.
+
+### P3 — Schemes & coaching styles
+- The **playbook** (formations + concepts) + **concept dispatch** in the resolver.
+- **Offensive & defensive schemes** as weighted playbooks; **coach attributes** wired into calling, clock, and advantage.
+- AI sets a per-team gameplan from scheme + coach + roster → **league-wide distinct identities**.
+- *Demo:* scout any team and see a real scheme; watch two contrasting styles (Air Raid vs. smashmouth) collide.
+
+### P4 — Polish & balance
+- Drive chart, SimCast narrative beats, richer stat overlays.
+- Balance pass so the new playstyles produce believable stat lines (scoring, run/pass splits, completion %, explosive-play rates) — the M9-style tuning, now with identities to tune against.
+- *Demo:* a multi-season run whose team-by-team stat profiles read like real, *distinct* programs.
+
+## Open questions for v1.1 {#sec-open}
+
+1. **Playbook breadth** — how many formations/concepts per scheme is enough for distinct identities without ballooning the caller/resolver? (Start lean, grow.)
+2. **Concept × coverage matchup table** — the modifier matrix (e.g., Cover 0 vs. a deep shot = boom/bust; zone vs. mesh = soft) that makes scheme-vs-scheme legible.
+3. **Pacing realism vs. watchability** — how much dead time to render before it drags, even at 1×; default speed and skip rules.
+4. **AI gameplan generation** — how a team's scheme + coach + roster yields a believable weekly gameplan (and how much it adapts week to week).
+5. **Timeline cost at scale** — building the full timeline for ~65 quick-simmed games/week must stay near-instant (it's cheap, but confirm).
+6. **Save growth** — is a reviewable timeline persisted for the user's games, or rebuilt on demand? (Likely rebuilt; only final/box persists.)
+7. **Jump-In handoff semantics** — when the future live mode swaps the caller mid-game, how state/među determinism is framed (a documented seam now, resolved when that mode is built).
+8. **Home-field-advantage strength** — how much edge a packed house should be; a tuning surface (too much and home teams never lose). Crowd grants *advantage* vs. a flat modifier — which, where?
+9. **Stadium data** — sourcing the ~130 stadium names / cities / capacities, and handling realignment / relocations over many seasons.
+10. **Commentary depth** — templated play descriptions vs. richer color for the Gamecast; can it reuse the Media `INarrativeGenerator` seam (templated now, LLM later)?

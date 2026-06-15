@@ -19,6 +19,8 @@ website:
         text: Mechanics
       - href: goals.qmd
         text: v1 Goals
+      - href: v1_1.qmd
+        text: v1.1
     right:
       - icon: github
         href: https://github.com/
@@ -35,6 +37,7 @@ website:
           - architecture.qmd
           - mechanics.qmd
           - goals.qmd
+          - v1_1.qmd
       - section: "Reference"
         contents:
           - decisions.qmd

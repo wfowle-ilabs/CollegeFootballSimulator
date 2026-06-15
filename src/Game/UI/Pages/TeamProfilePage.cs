@@ -22,6 +22,7 @@ public sealed class TeamProfilePage(int teamId) : Page
         string rankStr = rank > 0 ? $"#{rank} " : "";
         head.AddChild(Ui.Label($"{rankStr}{team.Name}", 24, Ui.Accent));
         head.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        head.AddChild(Ui.Button("View School", () => Nav.Push(new SchoolPage(teamId))));
         head.AddChild(Ui.Button("View Roster", () => Nav.Push(new RosterPage(teamId))));
         if (teamId == Nav.Game.UserTeam.Id)
             head.AddChild(Ui.Button("Depth Chart", () => Nav.Push(new DepthChartPage())));

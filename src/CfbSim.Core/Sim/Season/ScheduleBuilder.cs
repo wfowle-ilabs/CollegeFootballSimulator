@@ -102,6 +102,9 @@ public static class ScheduleBuilder
             schedule.Games.Add(matchup);
         }
 
+        // Assign kickoff days/windows and broadcast networks (deterministic, presentation-only).
+        BroadcastScheduler.Assign(rng, league, schedule);
+
         return schedule;
     }
 
