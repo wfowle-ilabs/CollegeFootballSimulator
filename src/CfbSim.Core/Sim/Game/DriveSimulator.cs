@@ -17,8 +17,14 @@ public sealed class DriveResult
     public required DriveEndReason Reason { get; init; }
     public int OffensePoints { get; init; }
     public bool SafetyConceded { get; init; }
-    /// <summary>Next team's starting ball-on (their perspective); -1 = kickoff → own 25.</summary>
+    /// <summary>Next team's starting ball-on (their perspective); -1 = kickoff → own 25.
+    /// When <see cref="OffenseRetains"/> is set, this is the SAME team's new ball-on.</summary>
     public int NextBallOn { get; init; } = -1;
+    /// <summary>The offense kept the ball (a recovered punt muff) — possession does not flip.</summary>
+    public bool OffenseRetains { get; init; }
+    /// <summary>The defense took a punt back for a touchdown (defense scores 7; the offense then
+    /// receives the ensuing kickoff, so possession does not flip).</summary>
+    public bool DefenseReturnTd { get; init; }
 }
 
 /// <summary>
@@ -29,7 +35,7 @@ public sealed class DriveResult
 public static class DriveSimulator
 {
     public static DriveResult Run(
-        IRng rng, Team offense, Team defense, BoxScore box, GameClock clock, List<string> log,
+        IRng rng, Team offense, Team defense, BoxScore box, GameClock clock, Drive drive,
         int startBallOn, int offenseScore, int defenseScore, double passBias, bool driveInFirstHalf, bool untimed)
     {
         int ballOn = startBallOn;
@@ -49,10 +55,21 @@ public static class DriveSimulator
             // --- Special teams (terminal) ---
             if (call == PlayType.Punt)
             {
-                PlayOutcome p = SpecialTeamsResolver.Punt(rng, offense);
+                PlayOutcome p = SpecialTeamsResolver.Punt(rng, offense, defense);
                 clock.Advance(p.ClockSeconds);
                 offTeam.PossessionSeconds += p.ClockSeconds;
-                log.Add($"{clock.Label()} {down_} at {spot}: punt {p.YardsGained} net");
+                if (p.Muffed)
+                {
+                    int recover = Math.Clamp(ballOn + p.YardsGained, ballOn, 99);
+                    Add(drive, clock, SegmentKind.SpecialTeams, $"{clock.Label()} {down_} at {spot}: punt MUFFED — {offense.Abbreviation} recovers at {Field.Describe(recover)}", down, distance, ballOn, PlayType.Punt);
+                    return new DriveResult { Reason = DriveEndReason.Punt, OffenseRetains = true, NextBallOn = recover };
+                }
+                if (p.ReturnTouchdown)
+                {
+                    Add(drive, clock, SegmentKind.SpecialTeams, $"{clock.Label()} {down_} at {spot}: punt RETURNED FOR TD by {defense.Abbreviation}!", down, distance, ballOn, PlayType.Punt);
+                    return new DriveResult { Reason = DriveEndReason.Punt, DefenseReturnTd = true };
+                }
+                Add(drive, clock, SegmentKind.SpecialTeams, $"{clock.Label()} {down_} at {spot}: " + (p.Blocked ? "punt BLOCKED" : $"punt {p.YardsGained} net"), down, distance, ballOn, PlayType.Punt);
                 int land = ballOn + p.YardsGained;
                 int next = land >= 100 ? 20 : Math.Clamp(100 - land, 1, 99);
                 return new DriveResult { Reason = DriveEndReason.Punt, NextBallOn = next };
@@ -64,7 +81,7 @@ public static class DriveSimulator
                 PlayOutcome fg = SpecialTeamsResolver.FieldGoal(rng, offense, dist);
                 clock.Advance(fg.ClockSeconds);
                 offTeam.PossessionSeconds += fg.ClockSeconds;
-                log.Add($"{clock.Label()} {down_} at {spot}: {dist}-yd FG {(fg.KickGood ? "GOOD" : "no good")}");
+                Add(drive, clock, SegmentKind.SpecialTeams, $"{clock.Label()} {down_} at {spot}: {dist}-yd FG {(fg.Blocked ? "BLOCKED" : fg.KickGood ? "GOOD" : "no good")}", down, distance, ballOn, PlayType.FieldGoal);
                 return fg.KickGood
                     ? new DriveResult { Reason = DriveEndReason.FieldGoalGood, OffensePoints = 3 }
                     : new DriveResult { Reason = DriveEndReason.FieldGoalMissed, NextBallOn = Math.Max(100 - ballOn, 20) };
@@ -89,7 +106,7 @@ public static class DriveSimulator
 
             bool firstDown = !td && !safety && !o.IsTurnover && actual >= distance;
             StatAggregator.RecordScrimmage(box, offense, defense, o, actual, td, firstDown);
-            log.Add($"{clock.Label()} {down_} at {spot}: {PlayLabel(call)} {Describe(o, actual, td)}");
+            Add(drive, clock, SegmentKind.Snap, $"{clock.Label()} {down_} at {spot}: {PlayLabel(call)} {Describe(o, actual, td)}", down, distance, ballOn, call, actual, td, firstDown, o.IsTurnover);
 
             if (o.IsTurnover)
             {
@@ -104,10 +121,20 @@ public static class DriveSimulator
             if (td)
             {
                 int points = 6;
-                PlayOutcome xp = SpecialTeamsResolver.ExtraPoint(rng, offense);
-                clock.Advance(xp.ClockSeconds);
-                if (xp.KickGood) points = 7;
-                log.Add($"          XP {(xp.KickGood ? "good" : "MISSED")}");
+                int diffAfterTd = offenseScore + 6 - defenseScore;
+                if (GoForTwo(diffAfterTd, !driveInFirstHalf, clock.SecondsLeftInHalf))
+                {
+                    (bool good, string how) = TwoPointTry(rng, offense, defense);
+                    if (good) points = 8;
+                    Add(drive, clock, SegmentKind.SpecialTeams, $"          2-PT ({how}) {(good ? "GOOD" : "no good")}");
+                }
+                else
+                {
+                    PlayOutcome xp = SpecialTeamsResolver.ExtraPoint(rng, offense);
+                    clock.Advance(xp.ClockSeconds);
+                    if (xp.KickGood) points = 7;
+                    Add(drive, clock, SegmentKind.SpecialTeams, $"          XP {(xp.KickGood ? "good" : "MISSED")}");
+                }
                 return new DriveResult { Reason = DriveEndReason.Touchdown, OffensePoints = points };
             }
 
@@ -136,6 +163,45 @@ public static class DriveSimulator
                 if (driveInFirstHalf && clock.PastHalf) return new DriveResult { Reason = DriveEndReason.EndOfHalf };
             }
         }
+    }
+
+    /// <summary>Append a play segment to the drive (carries the log text + structured fields).</summary>
+    private static void Add(Drive drive, GameClock clock, SegmentKind kind, string text,
+        int down = 0, int distance = 0, int ballOn = 0, PlayType playType = default,
+        int yards = 0, bool td = false, bool firstDown = false, bool turnover = false)
+        => drive.Segments.Add(new GameSegment
+        {
+            Kind = kind,
+            ClockLabel = clock.Label(),
+            ClockElapsed = clock.Elapsed,
+            Text = text,
+            Down = down,
+            Distance = distance,
+            BallOn = ballOn,
+            PlayType = playType,
+            Yards = yards,
+            Touchdown = td,
+            FirstDown = firstDown,
+            Turnover = turnover,
+        });
+
+    /// <summary>The two-point chart: go for two only late, when the math favors it
+    /// (diff is the offense's margin once the 6 is on the board).</summary>
+    private static bool GoForTwo(int diffAfterTd, bool secondHalf, int secondsLeftInHalf)
+    {
+        if (!secondHalf || secondsLeftInHalf > 480) return false; // ~last 8 minutes
+        return diffAfterTd is -2 or -5 or -10 or -16 or 1 or 4 or 5 or 11 or 12;
+    }
+
+    /// <summary>One goal-line snap for the conversion (lean run); good if it reaches the end zone.</summary>
+    private static (bool Good, string How) TwoPointTry(IRng rng, Team offense, Team defense)
+    {
+        bool pass = rng.NextDouble() < 0.42;
+        PlayOutcome o = pass
+            ? PassPlayResolver.Resolve(rng, offense, defense, PlayType.ShortPass, DefensiveKey.StopRun)
+            : RunPlayResolver.Resolve(rng, offense, defense, PlayType.InsideRun, DefensiveKey.StopRun);
+        bool good = !o.IsTurnover && !o.Sack && !o.Incomplete && o.YardsGained >= 3;
+        return (good, pass ? "pass" : "run");
     }
 
     private static string PlayLabel(PlayType t) => t switch

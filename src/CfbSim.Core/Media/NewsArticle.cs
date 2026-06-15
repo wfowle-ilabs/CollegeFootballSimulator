@@ -9,12 +9,12 @@ public enum ArticleType { GameRecap, UpsetAlert, RivalryResult, ShortRecap }
 /// </summary>
 public sealed class NewsArticle
 {
-    public int Id { get; set; }
-    public required int Year { get; init; }
-    public required int Week { get; init; }
-    public required ArticleType Type { get; init; }
-    public required bool Full { get; init; }
-    public required string Headline { get; init; }
-    public required string Body { get; init; }
-    public List<int> TeamIds { get; init; } = new(); // teams featured (for lookup)
+	public int Id { get; set; }
+	public required int Year { get; init; }
+	public required int Week { get; init; }
+	public required ArticleType Type { get; init; }
+	public required bool Full { get; init; }
+	public required string Headline { get; init; }
+	public required string Body { get; init; }
+	public List<int> TeamIds { get; init; } = new(); // teams featured (for lookup)
 }

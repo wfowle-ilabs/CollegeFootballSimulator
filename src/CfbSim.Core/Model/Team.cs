@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace CfbSim.Core.Model;
 
 /// <summary>
@@ -11,6 +13,11 @@ public sealed class Team
     public required string Abbreviation { get; init; }  // e.g. "UGA"
     public int Prestige { get; set; }                   // 1..100; biases generation
     public int ConferenceId { get; set; }               // 0 = independent (referenced by ID, not pointer)
+
+    /// <summary>The team's prep boost for the game being simulated (set by the season driver,
+    /// cleared after). Transient — never serialized.</summary>
+    [JsonIgnore]
+    public TeamBoost ActiveBoost { get; set; } = TeamBoost.None;
 
     public List<Player> Roster { get; init; } = new();
 

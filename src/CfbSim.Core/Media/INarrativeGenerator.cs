@@ -8,5 +8,5 @@ namespace CfbSim.Core.Media;
 /// </summary>
 public interface INarrativeGenerator
 {
-    NewsArticle Generate(NarrativeContext context);
+	NewsArticle Generate(NarrativeContext context);
 }

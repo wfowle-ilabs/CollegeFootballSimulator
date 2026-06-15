@@ -26,12 +26,16 @@ public static class PassPlayResolver
         outcome.Passer = qb;
         outcome.Receiver = wr;
 
+        // Training-prep modifiers (temporary, this game only).
+        int off = offense.ActiveBoost.OffenseBonus;
+        int def = defense.ActiveBoost.DefenseBonus;
+
         int keyBonus = key == DefensiveKey.StopPass ? 3 : key == DefensiveKey.StopRun ? -2 : 0;
 
         // 1. Protection.
         CheckResult prot = CheckResolver.ResolveContest(rng,
-            ol.Of(Skill.PassBlock), ol.Attributes.Strength,
-            rusher.Of(Skill.PassRush) + (key == DefensiveKey.StopPass ? 1 : 0), rusher.Attributes.Strength);
+            ol.Of(Skill.PassBlock) + off, ol.Attributes.Strength,
+            rusher.Of(Skill.PassRush) + (key == DefensiveKey.StopPass ? 1 : 0) + def, rusher.Attributes.Strength);
         Add(outcome, prot, $"PROT  {ol.Name} (OL) vs {rusher.Name} (rush)");
 
         if (prot.Blunder || prot.Margin <= -6)
@@ -49,8 +53,8 @@ public static class PassPlayResolver
         Skill accuracy = deep ? Skill.DeepAccuracy : Skill.ShortAccuracy;
         int coverageBonus = keyBonus + (deep ? 2 : 0); // deep throws are contested harder
         CheckResult throw_ = CheckResolver.ResolveContest(rng,
-            qb.Of(accuracy), qb.Attributes.Awareness,
-            cb.Of(Skill.ManCoverage) + coverageBonus, cb.Attributes.Agility);
+            qb.Of(accuracy) + off, qb.Attributes.Awareness,
+            cb.Of(Skill.ManCoverage) + coverageBonus + def, cb.Attributes.Agility);
         Add(outcome, throw_, $"THROW {qb.Name} ({(deep ? "deep" : "short")}) vs {cb.Name} (cov)");
 
         // A nat-1 is sometimes a pick, sometimes just a throwaway; a big coverage win can also be picked.
@@ -81,8 +85,8 @@ public static class PassPlayResolver
         int airYards = airBase + Clamp(Round(throw_.Margin * (deep ? 1.6 : 0.8)), 0, deep ? 34 : 14);
 
         CheckResult yacCheck = CheckResolver.ResolveContest(rng,
-            wr.Of(Skill.RouteRunning), wr.Attributes.Agility,
-            safety.Of(Skill.Tackling), safety.Attributes.Agility);
+            wr.Of(Skill.RouteRunning) + off, wr.Attributes.Agility,
+            safety.Of(Skill.Tackling) + def, safety.Attributes.Agility);
         Add(outcome, yacCheck, $"YAC   {wr.Name} (WR) vs {safety.Name}");
         int yac = yacCheck.Success ? Clamp(Round(yacCheck.Margin * 1.0), 0, 30) : 0;
 

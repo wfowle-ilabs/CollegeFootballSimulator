@@ -34,6 +34,27 @@ Each entry is something we've committed to (or explicitly deferred), so we don't
 | **Cross-module references** | **By ID**, resolved via the spine registry — never object pointers | Sidecars never point at each other or co-load; avoids coupling. |
 | **Cross-cutting data** | A dedicated **stats-index**, updated incrementally from events | Leaderboards/records without loading every sidecar. |
 
+## v1.1 — SimCast & playstyle identity {#sec-v11}
+
+The [v1.1 design](v1_1.qmd) commits to these (and refines two v1 calls above):
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| **Play Game options** | **Playcaller** *(disabled)* / **SimCast** / **Quick Sim** | The game-day dropdown. Playcaller = the future 3D live-calling mode; SimCast = the v1.1 broadcast; Quick Sim = instant. |
+| **Game-day viewing** | **SimCast** — a simulation *broadcast* (no 3D) | Watch your game paced + legible at a chosen speed; presentation over the same engine. |
+| **Game presentation** | A **tabbed hub**: Gamecast / Play-by-Play / Box Score / Team Stats / Game Info | Modeled on an ESPN gamecast; **drives are first-class objects** under Play-by-Play. |
+| **User control (refined)** | **Pre-game gameplan**, AI caller honors it, watch it unfold | Still "sim & watch" — a gameplan *you* authored, not a default. No live per-play input in SimCast. |
+| **Play timeline** | A typed **`GameTimeline`** (drives → segments); the string log is a *derived view* | One deterministic source feeds every tab, the log, and the box score; speed is pure presentation. |
+| **Clock & pacing** | Real **college** clock: 1st-down-keeps-running (except last 2 min), 2-min timeout, tempo, timeouts, TV timeouts | Resolves open question #3; produces the "pauses in the record." NCAA rules, not NFL. |
+| **Play catalog (refined)** | A **playbook of formations + concepts** | Resolves open question #2 toward richer concepts (not abstract buckets). |
+| **Schemes** | **Offensive + defensive schemes** as weighted playbooks | Air Raid / Spread-RPO / Pro-Style / Smashmouth / Option vs. 4-3 / 3-4 / nickel / man-press / zone. |
+| **Coaching styles** | Wire existing **`Coach` attributes** into calling, clock, advantage | A team's identity = `Scheme × Coach × Personnel × Gameplan`. |
+| **Stadiums** | Each program gets a **stadium** (name / city / **capacity**) | Data fill in `FbsLeagueData`; the venue the economy later hangs off. |
+| **Attendance & home-field** | Simulated **attendance** → **home-field advantage** in the dice | First real HFA in the engine (crowd grants advantage); deterministic; the first driver of the future ticket → NIL economy. |
+| **Play-caller** | Realize **`IPlayCaller`**; one `AiPlayCaller` for all teams | The documented seam; `UserPlayCaller` left for Playcaller / Jump-In. |
+| **Playcaller / Jump-In** | Present but **disabled** in v1.1 | Two entry points to the *future* 3D live-calling mode — **Playcaller** (from Play Game, at kickoff) and **Jump-In** (inside SimCast, mid-game). The seam (interface + buttons) ships now; the mode does not. |
+| **Determinism (restated)** | Gameplan / scheme / coach / **attendance** are **inputs**; SimCast speed is **presentation** | Same save + seed + gameplans ⇒ identical game; scrubbing speed can't change a yard. |
+
 ## Deferred to later versions {#sec-deferred}
 
 | Area | Target |
@@ -44,7 +65,9 @@ Each entry is something we've committed to (or explicitly deferred), so we don't
 | Sub-FBS levels (FCS, D-II, D-III, NAIA, JUCO) | v4 |
 | Conference economy (TV deals → budgets → NIL/recruiting/facilities) | v2+ |
 | On-device LLM narrative writer (templated baseline ships in v1) | v1.x, once validated |
-| Live play-calling / coach mode, spectator mode, field visualization | Later |
+| **SimCast broadcast + pre-game gameplan + scheme/coach playstyles** | **v1.1** (see [v1.1 design](v1_1.qmd)) |
+| Live play-calling (Playcaller / Jump-In) + 3D gameday rendering | Later (v1.1 ships the *seam*: `IPlayCaller` + two disabled buttons) |
+| Spectator mode for non-player games (watch them play-by-play) | Later (v1.1's retained timeline makes it a presentation toggle) |
 | Online / multiplayer / dynasty sharing | Not planned |
 
 ## Open questions {#sec-open}
@@ -52,8 +75,8 @@ Each entry is something we've committed to (or explicitly deferred), so we don't
 Tracked design questions that don't block the architecture but need answers as we build (see also the [Architecture open questions](architecture.qmd#sec-open-questions)):
 
 1. **Exact attribute & skill list** + the `attr → modifier` and `margin → yards` tuning curves (needs its own attributes reference).
-2. **Play catalog granularity** — real formations/concepts vs. abstract play buckets.
-3. **Clock & game-flow fidelity** — play/game clock, quarter scaling, hurry-up/2-minute logic.
+2. ~~**Play catalog granularity**~~ — *resolved in [v1.1](v1_1.qmd#sec-schemes): a real playbook of formations + concepts.*
+3. ~~**Clock & game-flow fidelity**~~ — *resolved in [v1.1](v1_1.qmd#sec-clock): real tempo / timeouts / TV timeouts / 2-minute model.*
 4. **Penalties & special-teams depth** for v1.
 5. **Data sourcing & generation** — where real FBS team/conference identity data comes from, and the `PlayerGenerator` distributions (per-position, prestige-weighted) for believable rosters and walk-ons.
 6. **CFP format specifics** — exact bracket/seeding/bye rules and conference auto-bids.

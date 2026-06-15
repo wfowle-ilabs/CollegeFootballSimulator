@@ -29,6 +29,10 @@ public static class RunPlayResolver
         Player pursuit = defense.Starter(Position.S) ?? lb;
         outcome.BallCarrier = rb;
 
+        // Training-prep modifiers (temporary, this game only).
+        int off = offense.ActiveBoost.OffenseBonus;
+        int def = defense.ActiveBoost.DefenseBonus;
+
         int keyBonus = key == DefensiveKey.StopRun ? 3 : key == DefensiveKey.StopPass ? -2 : 0;
 
         // 1. The push (trenches / edge).
@@ -38,8 +42,8 @@ public static class RunPlayResolver
         int shedAttr = outside ? front.Attributes.Speed : front.Attributes.Strength;
 
         CheckResult push = CheckResolver.ResolveContest(rng,
-            ol.Of(blockSkill), blockAttr,
-            front.Of(shedSkill) + keyBonus, shedAttr);
+            ol.Of(blockSkill) + off, blockAttr,
+            front.Of(shedSkill) + keyBonus + def, shedAttr);
         Add(outcome, push, $"PUSH  {ol.Name} (OL) vs {front.Name}");
 
         if (push.Blunder)
@@ -55,7 +59,7 @@ public static class RunPlayResolver
         if (push.Crit)
         {
             outcome.Trace.Add($"      → clean lane! ({lineYards} and gone)");
-            return OpenField(rng, rb, pursuit, outcome, outside);
+            return OpenField(rng, rb, pursuit, outcome, outside, off, def);
         }
 
         if (!push.Success)
@@ -67,14 +71,14 @@ public static class RunPlayResolver
 
         // 2. Second level.
         CheckResult second = CheckResolver.ResolveContest(rng,
-            rb.Of(Skill.Elusiveness), rb.Attributes.Agility,
-            lb.Of(Skill.Tackling) + keyBonus, lb.Attributes.Agility);
+            rb.Of(Skill.Elusiveness) + off, rb.Attributes.Agility,
+            lb.Of(Skill.Tackling) + keyBonus + def, lb.Attributes.Agility);
         Add(outcome, second, $"2ND   {rb.Name} (RB) vs {lb.Name} (LB)");
 
         if (second.Blunder || second.Margin <= BigHitMargin)
         {
             CheckResult ball = CheckResolver.Resolve(rng,
-                RatingMath.Modifier(rb.Of(Skill.BallSecurity), rb.Attributes.Composure), FumbleDc - 10);
+                RatingMath.Modifier(rb.Of(Skill.BallSecurity) + off, rb.Attributes.Composure), FumbleDc - 10);
             Add(outcome, ball, $"BALL  {rb.Name} ball security");
             if (!ball.Success)
             {
@@ -89,7 +93,7 @@ public static class RunPlayResolver
         if (second.Crit)
         {
             outcome.Trace.Add("      → into the open!");
-            return OpenField(rng, rb, pursuit, outcome, outside);
+            return OpenField(rng, rb, pursuit, outcome, outside, off, def);
         }
 
         if (!second.Success)
@@ -105,7 +109,7 @@ public static class RunPlayResolver
         if (second.Margin >= 8)
         {
             outcome.Trace.Add($"      → breaks free (+{yac})!");
-            return OpenField(rng, rb, pursuit, outcome, outside);
+            return OpenField(rng, rb, pursuit, outcome, outside, off, def);
         }
 
         outcome.Trace.Add($"      → down after {outcome.YardsGained}");
@@ -113,11 +117,11 @@ public static class RunPlayResolver
         return outcome;
     }
 
-    private static PlayOutcome OpenField(IRng rng, Player rb, Player pursuit, PlayOutcome outcome, bool outside)
+    private static PlayOutcome OpenField(IRng rng, Player rb, Player pursuit, PlayOutcome outcome, bool outside, int off, int def)
     {
         CheckResult open = CheckResolver.ResolveContest(rng,
-            rb.Attributes.Speed, rb.Attributes.Speed,
-            pursuit.Attributes.Speed, pursuit.Attributes.Speed);
+            rb.Attributes.Speed + off, rb.Attributes.Speed,
+            pursuit.Attributes.Speed + def, pursuit.Attributes.Speed);
         Add(outcome, open, $"OPEN  {rb.Name} vs {pursuit.Name} pursuit");
 
         int breakaway = Clamp(Round(8 + open.Margin * 2.5), 0, 80);

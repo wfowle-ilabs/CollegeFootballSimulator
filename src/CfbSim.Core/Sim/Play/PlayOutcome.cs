@@ -21,6 +21,15 @@ public sealed class PlayOutcome
     /// <summary>For kicks (FG/XP): whether it was good.</summary>
     public bool KickGood { get; set; }
 
+    /// <summary>For a punt: the return team muffed it and the kicking team recovered (turnover).</summary>
+    public bool Muffed { get; set; }
+
+    /// <summary>A kick (FG/XP/punt) was blocked.</summary>
+    public bool Blocked { get; set; }
+
+    /// <summary>A punt was returned all the way for a touchdown by the return team.</summary>
+    public bool ReturnTouchdown { get; set; }
+
     public int ClockSeconds { get; set; } = 30;
 
     /// <summary>Incompletion / out of bounds / score / kick → clock stops.</summary>

@@ -28,8 +28,32 @@ public sealed class PlayerProfilePage(Player player, int teamId) : Page
         columns.AddChild(Ui.Card("Attributes", Text(Attributes())));
         columns.AddChild(Ui.Card("Skills", Text(Skills())));
         columns.AddChild(Ui.Card("Season Stats", Text(Stats())));
+        columns.AddChild(Ui.Card("Training", Text(Training())));
         root.AddChild(columns);
         return root;
+    }
+
+    /// <summary>The active prep boost that applies to this player (by position phase).</summary>
+    private string Training()
+    {
+        TeamBoost b = Nav.Game.BoostFor(teamId);
+        bool special = player.Position is Position.K or Position.P;
+        bool offense = player.Position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL;
+        int net = special ? b.SpecialBonus : offense ? b.OffenseBonus : b.DefenseBonus;
+        string phase = special ? "special teams" : offense ? "offense" : "defense";
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Applies to: {phase}");
+        sb.AppendLine($"Net to checks: {(net > 0 ? "+" + net : net.ToString())}");
+        sb.AppendLine($"Fatigue:    {(b.Fatigue > 0 ? "-" + b.Fatigue : "0")}");
+        sb.AppendLine();
+        if (b.Sources.Count > 0)
+        {
+            sb.AppendLine("This week's prep:");
+            foreach (string s in b.Sources.Distinct()) sb.AppendLine($"  • {s}");
+        }
+        else sb.AppendLine("No training scheduled.");
+        return sb.ToString();
     }
 
     private string Bio()

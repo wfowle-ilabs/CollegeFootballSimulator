@@ -20,6 +20,10 @@ public interface INav
     void Push(Page page);
     void PopTo(int depth);
     void Refresh();
+
+    /// <summary>Ask the host to run a sim action (e.g. "sim to here") — routed through the
+    /// shell's confirmation + transition. <paramref name="what"/> describes it for the prompt.</summary>
+    void RequestSim(string what, Action perform);
 }
 
 /// <summary>
@@ -27,7 +31,7 @@ public interface INav
 /// the parent pages alive (their state preserved); the breadcrumb pops back to any of them.
 /// Used by both the in-season shell and the postseason screen.
 /// </summary>
-public sealed class NavHost(GameManager game) : INav
+public sealed class NavHost(GameManager game, Action<string, Action>? onSim = null) : INav
 {
     private readonly List<Page> _stack = new();
     private VBoxContainer _root = null!;
@@ -35,6 +39,8 @@ public sealed class NavHost(GameManager game) : INav
     private MarginContainer _content = null!;
 
     public GameManager Game => game;
+
+    public void RequestSim(string what, Action perform) => onSim?.Invoke(what, perform);
 
     public Control Build()
     {

@@ -35,6 +35,17 @@ public static class Ui
 		return button;
 	}
 
+	/// <summary>A styled dropdown button (its <see cref="Godot.PopupMenu"/> is filled by the caller).</summary>
+	public static MenuButton MenuButton(string text)
+	{
+		var mb = new MenuButton { Text = text, CustomMinimumSize = new Vector2(150, 34), Flat = false };
+		mb.AddThemeStyleboxOverride("normal", ButtonStyle(Panel));
+		mb.AddThemeStyleboxOverride("hover", ButtonStyle(Panel.Lightened(0.12f)));
+		mb.AddThemeStyleboxOverride("pressed", ButtonStyle(Panel.Darkened(0.1f)));
+		mb.AddThemeColorOverride("font_color", Text);
+		return mb;
+	}
+
 	public static VBoxContainer VBox(int separation = 8)
 	{
 		var box = new VBoxContainer();
@@ -94,6 +105,40 @@ public static class Ui
 		return (Card(title, scroll), body);
 	}
 
+	/// <summary>A small rounded badge (e.g. a network or time-slot tag).</summary>
+	public static Control Chip(string text, Color? bg = null, Color? fg = null)
+	{
+		var panel = new PanelContainer();
+		var style = new StyleBoxFlat
+		{
+			BgColor = bg ?? PanelBorder,
+			CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
+			CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
+			ContentMarginLeft = 7, ContentMarginRight = 7,
+			ContentMarginTop = 2, ContentMarginBottom = 2,
+		};
+		panel.AddThemeStyleboxOverride("panel", style);
+		panel.AddChild(Label(text, 11, fg ?? Text));
+		panel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+		return panel;
+	}
+
+	/// <summary>A plain bordered tile (a card without the accent title). Caller fills the body.
+	/// <paramref name="highlight"/> draws an accent border (e.g. the current day).</summary>
+	public static PanelContainer Tile(bool highlight = false)
+	{
+		var panel = new PanelContainer();
+		StyleBoxFlat style = CardStyle();
+		if (highlight)
+		{
+			style.BorderColor = Accent;
+			style.SetBorderWidthAll(2);
+			style.BgColor = Panel.Lightened(0.04f);
+		}
+		panel.AddThemeStyleboxOverride("panel", style);
+		return panel;
+	}
+
 	/// <summary>A compact, accent-colored text link button (breadcrumbs, inline links).</summary>
 	public static Button LinkButton(string text, Action onPressed, Color? color = null)
 	{
@@ -138,6 +183,19 @@ public static class Ui
 		var rect = new ColorRect { Color = Bg };
 		rect.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		return rect;
+	}
+
+	/// <summary>An opaque panel for the slide-over menu (solid background + accent left edge).</summary>
+	public static StyleBoxFlat SidePanelStyle()
+	{
+		var s = new StyleBoxFlat
+		{
+			BgColor = Panel,
+			BorderColor = Accent,
+			ContentMarginLeft = 4, ContentMarginRight = 4, ContentMarginTop = 4, ContentMarginBottom = 4,
+		};
+		s.BorderWidthLeft = 2;
+		return s;
 	}
 
 	private static StyleBoxFlat CardStyle()
