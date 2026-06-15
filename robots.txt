@@ -1,0 +1,1 @@
+Sitemap: https://wfowle-ilabs.github.io/CollegeFootballSimulator/sitemap.xml

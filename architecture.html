@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Architecture – College Football Simulator</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./mechanics.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-9150029ec934d1cf45e0ed904b425734.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-e11ed3a3124fed09e1f211e21a312cdc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">College Football Simulator</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./architecture.html"> 
+<span class="menu-text">Architecture</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./mechanics.html"> 
+<span class="menu-text">Mechanics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./goals.html"> 
+<span class="menu-text">v1 Goals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./v1_1.html"> 
+<span class="menu-text">v1.1</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./architecture.html">Design</a></li><li class="breadcrumb-item"><a href="./architecture.html">Architecture</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Design</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./architecture.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mechanics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mechanics — Checks, Ratings &amp; the Inside Run</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./goals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">v1 Goals &amp; Milestones</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./v1_1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">v1.1 — SimCast &amp; Playstyle Identity</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./decisions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Decisions Log</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="99">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-philosophy" id="toc-sec-philosophy" class="nav-link active" data-scroll-target="#sec-philosophy"><span class="header-section-number">1</span> Design Philosophy</a></li>
+  <li><a href="#sec-scope" id="toc-sec-scope" class="nav-link" data-scroll-target="#sec-scope"><span class="header-section-number">2</span> What We Simulate vs.&nbsp;What We Don’t</a>
+  <ul class="collapse">
+  <li><a href="#in-scope-v1" id="toc-in-scope-v1" class="nav-link" data-scroll-target="#in-scope-v1"><span class="header-section-number">2.1</span> ✅ In scope (v1)</a></li>
+  <li><a href="#out-of-scope-v1-deferred-to-later-versions" id="toc-out-of-scope-v1-deferred-to-later-versions" class="nav-link" data-scroll-target="#out-of-scope-v1-deferred-to-later-versions"><span class="header-section-number">2.2</span> ❌ Out of scope (v1 — deferred to later versions)</a></li>
+  </ul></li>
+  <li><a href="#sec-world" id="toc-sec-world" class="nav-link" data-scroll-target="#sec-world"><span class="header-section-number">3</span> World Hierarchy &amp; Ownership Model</a>
+  <ul class="collapse">
+  <li><a href="#sec-pyramid" id="toc-sec-pyramid" class="nav-link" data-scroll-target="#sec-pyramid"><span class="header-section-number">3.1</span> The ownership pyramid</a></li>
+  <li><a href="#what-each-level-holds-v1-vs.-later" id="toc-what-each-level-holds-v1-vs.-later" class="nav-link" data-scroll-target="#what-each-level-holds-v1-vs.-later"><span class="header-section-number">3.2</span> What each level holds — v1 vs.&nbsp;later</a></li>
+  <li><a href="#the-future-economic-flow-v2-sketched-now-so-v1-doesnt-block-it" id="toc-the-future-economic-flow-v2-sketched-now-so-v1-doesnt-block-it" class="nav-link" data-scroll-target="#the-future-economic-flow-v2-sketched-now-so-v1-doesnt-block-it"><span class="header-section-number">3.3</span> The future economic flow (v2+, sketched now so v1 doesn’t block it)</a></li>
+  </ul></li>
+  <li><a href="#sec-resolution" id="toc-sec-resolution" class="nav-link" data-scroll-target="#sec-resolution"><span class="header-section-number">4</span> The Resolution System (d20 + DC)</a>
+  <ul class="collapse">
+  <li><a href="#the-check" id="toc-the-check" class="nav-link" data-scroll-target="#the-check"><span class="header-section-number">4.1</span> The check</a></li>
+  <li><a href="#determinism-reproducibility" id="toc-determinism-reproducibility" class="nav-link" data-scroll-target="#determinism-reproducibility"><span class="header-section-number">4.2</span> Determinism &amp; reproducibility</a></li>
+  <li><a href="#why-this-and-not-probability-tables" id="toc-why-this-and-not-probability-tables" class="nav-link" data-scroll-target="#why-this-and-not-probability-tables"><span class="header-section-number">4.3</span> Why this and not probability tables</a></li>
+  </ul></li>
+  <li><a href="#sec-layers" id="toc-sec-layers" class="nav-link" data-scroll-target="#sec-layers"><span class="header-section-number">5</span> Simulation Layers (top-down)</a></li>
+  <li><a href="#sec-events" id="toc-sec-events" class="nav-link" data-scroll-target="#sec-events"><span class="header-section-number">6</span> Event-Driven Architecture &amp; Side Effects</a></li>
+  <li><a href="#sec-media" id="toc-sec-media" class="nav-link" data-scroll-target="#sec-media"><span class="header-section-number">7</span> Media &amp; Narrative Subsystem</a></li>
+  <li><a href="#sec-attributes" id="toc-sec-attributes" class="nav-link" data-scroll-target="#sec-attributes"><span class="header-section-number">8</span> Attribute &amp; Skill Model (BG3-inspired)</a>
+  <ul class="collapse">
+  <li><a href="#core-attributes-every-player-has-these" id="toc-core-attributes-every-player-has-these" class="nav-link" data-scroll-target="#core-attributes-every-player-has-these"><span class="header-section-number">8.1</span> Core attributes (every player has these)</a></li>
+  <li><a href="#position-skills-subset-relevant-per-position" id="toc-position-skills-subset-relevant-per-position" class="nav-link" data-scroll-target="#position-skills-subset-relevant-per-position"><span class="header-section-number">8.2</span> Position skills (subset relevant per position)</a></li>
+  <li><a href="#coaches-staff" id="toc-coaches-staff" class="nav-link" data-scroll-target="#coaches-staff"><span class="header-section-number">8.3</span> Coaches &amp; staff</a></li>
+  <li><a href="#derived-vs.-stored" id="toc-derived-vs.-stored" class="nav-link" data-scroll-target="#derived-vs.-stored"><span class="header-section-number">8.4</span> Derived vs.&nbsp;stored</a></li>
+  <li><a href="#sec-player-gen" id="toc-sec-player-gen" class="nav-link" data-scroll-target="#sec-player-gen"><span class="header-section-number">8.5</span> Player generation (initial rosters &amp; walk-ons)</a></li>
+  </ul></li>
+  <li><a href="#sec-data-model" id="toc-sec-data-model" class="nav-link" data-scroll-target="#sec-data-model"><span class="header-section-number">9</span> Data Model — Core Classes</a></li>
+  <li><a href="#sec-storage" id="toc-sec-storage" class="nav-link" data-scroll-target="#sec-storage"><span class="header-section-number">10</span> Storage &amp; Save Architecture</a>
+  <ul class="collapse">
+  <li><a href="#the-spine-main-save-file" id="toc-the-spine-main-save-file" class="nav-link" data-scroll-target="#the-spine-main-save-file"><span class="header-section-number">10.1</span> The spine (main save file)</a></li>
+  <li><a href="#module-sidecars-v1-partition" id="toc-module-sidecars-v1-partition" class="nav-link" data-scroll-target="#module-sidecars-v1-partition"><span class="header-section-number">10.2</span> Module sidecars (v1 partition)</a></li>
+  <li><a href="#the-one-rule-that-makes-it-work-reference-by-id-never-by-pointer" id="toc-the-one-rule-that-makes-it-work-reference-by-id-never-by-pointer" class="nav-link" data-scroll-target="#the-one-rule-that-makes-it-work-reference-by-id-never-by-pointer"><span class="header-section-number">10.3</span> The one rule that makes it work: reference by ID, never by pointer</a></li>
+  <li><a href="#the-cross-cutting-exception" id="toc-the-cross-cutting-exception" class="nav-link" data-scroll-target="#the-cross-cutting-exception"><span class="header-section-number">10.4</span> The cross-cutting exception</a></li>
+  <li><a href="#growing-complexity-over-time" id="toc-growing-complexity-over-time" class="nav-link" data-scroll-target="#growing-complexity-over-time"><span class="header-section-number">10.5</span> Growing complexity over time</a></li>
+  <li><a href="#integrity" id="toc-integrity" class="nav-link" data-scroll-target="#integrity"><span class="header-section-number">10.6</span> Integrity</a></li>
+  </ul></li>
+  <li><a href="#sec-structure" id="toc-sec-structure" class="nav-link" data-scroll-target="#sec-structure"><span class="header-section-number">11</span> Project Structure &amp; Runtime Composition</a></li>
+  <li><a href="#sec-forward-compat" id="toc-sec-forward-compat" class="nav-link" data-scroll-target="#sec-forward-compat"><span class="header-section-number">12</span> Forward-Compatibility Hooks (so v2+ doesn’t require a rewrite)</a></li>
+  <li><a href="#sec-open-questions" id="toc-sec-open-questions" class="nav-link" data-scroll-target="#sec-open-questions"><span class="header-section-number">13</span> Open Questions (to resolve before/while building)</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./architecture.html">Design</a></li><li class="breadcrumb-item"><a href="./architecture.html">Architecture</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Architecture</h1>
+<p class="subtitle lead">College Football Simulator — v1</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Status:</strong> Living design document. <strong>Engine:</strong> Godot 4.6.3 · <strong>Language:</strong> C# / .NET · <strong>Genre:</strong> Single-player season-management simulation.</p>
+</div>
+</div>
+</div>
+<section id="sec-philosophy" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-philosophy"><span class="header-section-number">1</span> Design Philosophy</h2>
+<p>Three principles drive every decision below.</p>
+<ol type="1">
+<li><strong>Simulation over presentation (for v1).</strong> The engine is the product. The UI exists to start a save, configure a team, and watch outcomes. We build a correct, observable simulation core first; polish comes later.</li>
+<li><strong>No “overall” rating — character sheets, not star ratings.</strong> Players, coaches, and staff are described by <strong>attributes</strong> and <strong>skills</strong> the way a <em>Baldur’s Gate III</em> character is. A player is not “an 87 OVR”; he is a bundle of numbers (Strength 14, Awareness 11, Route Running 16…) that produce emergent results. This makes development, scheme fit, and matchups <em>fall out of the math</em> rather than being hand-tuned.</li>
+<li><strong>Outcomes are dice, not formulas with noise bolted on.</strong> Every contested event resolves as a <strong>d20 check against a Difficulty Class (DC)</strong> modified by attributes. The randomness is the design, not a fudge factor. This keeps results legible (“he failed the block check, DL won the rep”) and tunable.</li>
+</ol>
+</section>
+<section id="sec-scope" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-scope"><span class="header-section-number">2</span> What We Simulate vs.&nbsp;What We Don’t</h2>
+<p>This boundary is the most important thing in this document. Everything in “Out” is deliberately deferred so v1 can ship.</p>
+<section id="in-scope-v1" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="in-scope-v1"><span class="header-section-number">2.1</span> ✅ In scope (v1)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>League</strong></td>
+<td>FBS (a.k.a. FBS-IAA) only — all conferences, all teams.</td>
+</tr>
+<tr class="even">
+<td><strong>Scheduling</strong></td>
+<td>The real current scheduling structure: conference + non-conference games, conference championship games.</td>
+</tr>
+<tr class="odd">
+<td><strong>Postseason</strong></td>
+<td>The full <strong>CFP</strong> slate (current format: 12-team bracket with byes, plus the bowl/championship structure feeding it).</td>
+</tr>
+<tr class="even">
+<td><strong>Games</strong></td>
+<td><strong>Play-by-play</strong> simulation — every down: down &amp; distance, play call, d20 resolution, yardage, clock, scoring, turnovers, penalties, special teams.</td>
+</tr>
+<tr class="odd">
+<td><strong>Players</strong></td>
+<td>Full active rosters with BG3-style attributes/skills, position, year, depth-chart slot, fatigue, in-game/season injury state.</td>
+</tr>
+<tr class="even">
+<td><strong>Coaches &amp; Staff</strong></td>
+<td>Head coach + coordinators (+ position coaches as ratings) described by attributes that bias scheme, play-calling tendencies, and player development.</td>
+</tr>
+<tr class="odd">
+<td><strong>Stats</strong></td>
+<td>Per-play → per-game box scores → season aggregates (team &amp; individual), standings, rankings.</td>
+</tr>
+<tr class="even">
+<td><strong>User team</strong></td>
+<td>Pick one team in a conference; set scheme/gameplan and depth chart pre-game; <strong>sim &amp; watch</strong>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Game speed (watch vs.&nbsp;quick sim)</strong></td>
+<td>Two presentation modes over the <em>same</em> engine: <strong>watch</strong> (play-by-play log + live box score) and <strong>quick sim</strong> (instant final score + box score, play log discarded). The user may quick-sim any game, including their own. <strong>Non-player fixtures default to quick sim</strong> (a whole week’s other games resolve instantly).</td>
+</tr>
+<tr class="even">
+<td><strong>World hierarchy</strong></td>
+<td>The full institutional pyramid (Division → Conference → University → Athletics Dept → Team) exists as data, even where v1 only puts behavior on the Team — see <a href="#sec-world" class="quarto-xref">Section&nbsp;3</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Media &amp; narratives</strong></td>
+<td>An in-game <strong>ESPN-style site</strong> (Media menu): weekly recaps, season storylines, a <strong>Featured</strong> tab, and lookup for <em>any</em> team. Built on an event-driven pipeline; v1 ships <strong>deterministic, templated</strong> articles with a <em>pluggable</em> local-LLM writer that drops in behind the same interface — see <a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>.</td>
+</tr>
+<tr class="even">
+<td><strong>Multiple seasons</strong></td>
+<td>v1 simulates <strong>season after season</strong> — finish a year, run a lightweight offseason, roll into the next, indefinitely.</td>
+</tr>
+<tr class="odd">
+<td><strong>Offseason (walk-on placeholder)</strong></td>
+<td>Between seasons: archive the year, advance class years, graduate/depart players, and <strong>fill open slots with generated walk-ons</strong> — the v1 stand-in for recruiting.</td>
+</tr>
+<tr class="even">
+<td><strong>Player generation</strong></td>
+<td>A deterministic, prestige-weighted <strong>player generator</strong> populates initial rosters at new-save and the walk-ons each offseason — see <a href="#sec-player-gen" class="quarto-xref">Section&nbsp;8.5</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Save/Load &amp; modular storage</strong></td>
+<td>Persist and resume at any time. State is split into per-module <strong>sidecars</strong> (current / season / historical / media + a stats index) referenced <strong>by ID</strong> from a thin main-save spine — see <a href="#sec-storage" class="quarto-xref">Section&nbsp;10</a>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="out-of-scope-v1-deferred-to-later-versions" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="out-of-scope-v1-deferred-to-later-versions"><span class="header-section-number">2.2</span> ❌ Out of scope (v1 — deferred to later versions)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Why deferred</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Real recruiting</strong></td>
+<td>v1 runs multiple seasons but replenishes rosters with <strong>generated walk-ons</strong> (<a href="#sec-player-gen" class="quarto-xref">Section&nbsp;8.5</a>), not a recruiting cycle. Prospects, offers, visits, commitments are v2.</td>
+</tr>
+<tr class="even">
+<td><strong>Transfer portal</strong></td>
+<td>Depends on player valuation &amp; recruiting. Post-v1.</td>
+</tr>
+<tr class="odd">
+<td><strong>Coaching carousel</strong></td>
+<td>Hiring/firing/poaching, contracts. Post-v1.</td>
+</tr>
+<tr class="even">
+<td><strong>Deep player progression</strong></td>
+<td>v1’s offseason advances class years and replaces departures with walk-ons; rich attribute development (coach-driven growth, redshirts, etc.) is v2.</td>
+</tr>
+<tr class="odd">
+<td><strong>Sub-FBS levels</strong> (FCS, D-II, D-III, NAIA, JUCO/community college)</td>
+<td>Architecture must <em>allow</em> it (see <a href="#sec-forward-compat" class="quarto-xref">Section&nbsp;12</a>), but v1 ships FBS only.</td>
+</tr>
+<tr class="even">
+<td><strong>Live play-calling / coach-mode input during games</strong></td>
+<td>v1 is sim-and-watch. The engine is built so play-calling <em>could</em> be injected later, but the user does not call plays in v1.</td>
+</tr>
+<tr class="odd">
+<td><strong>3D/2D field visualization</strong></td>
+<td>v1 presents games as text/log + evolving box score. No animated field.</td>
+</tr>
+<tr class="even">
+<td><strong>Spectator mode</strong> (watch <em>non-player</em> games play-by-play)</td>
+<td>Non-player games are quick-simmed in v1. Watching another team’s game unfold play-by-play comes later — and because quick-sim already runs the full engine, it’s a presentation toggle (retain the play log), not an engine change.</td>
+</tr>
+<tr class="odd">
+<td><strong>Conference economy</strong> (TV deals → budgets → NIL/recruiting/facilities)</td>
+<td>The world hierarchy that carries it exists in v1 (<a href="#sec-world" class="quarto-xref">Section&nbsp;3</a>), but the money flow is v2+.</td>
+</tr>
+<tr class="even">
+<td><strong>On-device LLM narrative writer</strong></td>
+<td>The Media pipeline + templated articles ship in v1; the local ~7B/GGUF writer (LLamaSharp) is pluggable behind <code>INarrativeGenerator</code> and lands once model size/perf/quality are validated — see <a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>.</td>
+</tr>
+<tr class="odd">
+<td><strong>Online / multiplayer / dynasty sharing</strong></td>
+<td>Not considered for v1.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="sec-world" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-world"><span class="header-section-number">3</span> World Hierarchy &amp; Ownership Model</h2>
+<p>College football is not just teams and games — it’s an institutional pyramid where money and membership flow downward and results flow upward. Modeling this hierarchy correctly in v1 (even where most levels are thin) is what makes the v1→v2 leap possible: v2’s economy (TV deals → budgets → NIL, recruiting, facilities) bolts directly onto this skeleton instead of forcing a restructure.</p>
+<section id="sec-pyramid" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="sec-pyramid"><span class="header-section-number">3.1</span> The ownership pyramid</h3>
+<pre><code>Division                     ── e.g. FBS (FBS-IAA). The competitive tier.
+└─ Conference                ── membership group; negotiates media rights.
+   ├─ TV / Media Deal        ── owned by the conference; distributes revenue to members.
+   └─ University   (member)  ── the institution.
+      └─ Athletics Department── holds the budget; runs all sports.
+         └─ Team  (football) ── the football program — what we play &amp; sim.
+            ├─ Roster (Players)
+            ├─ Coaches &amp; Staff
+            └─ Depth chart / scheme</code></pre>
+<p>Two distinct relationships live here, and keeping them separate is what makes realignment and economics clean later:</p>
+<ul>
+<li><strong>Containment / ownership (downward):</strong> Division → Conference → University → Athletics Department → Team → Roster. The literal tree of who-owns-what.</li>
+<li><strong>Membership (sideways):</strong> a University (via its Team) <em>belongs to</em> a Conference for competition and revenue-sharing. Conference realignment = re-pointing this membership edge without touching the ownership chain.</li>
+</ul>
+<p>The <strong>TV/Media Deal hangs off the Conference, not the Team</strong> — deliberate and true to life: conferences sell media rights collectively and distribute to members through their athletics departments.</p>
+</section>
+<section id="what-each-level-holds-v1-vs.-later" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="what-each-level-holds-v1-vs.-later"><span class="header-section-number">3.2</span> What each level holds — v1 vs.&nbsp;later</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Level</th>
+<th>v1 (modeled now)</th>
+<th>Later (v2+)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Division</strong> (FBS-IAA)</td>
+<td>Identity, its set of conferences, postseason/CFP rules.</td>
+<td>Other divisions (FCS→JUCO); multi-division play.</td>
+</tr>
+<tr class="even">
+<td><strong>Conference</strong></td>
+<td>Members, divisions/pods, scheduling rules, tiebreakers, championship-game config, auto-bid logic.</td>
+<td>Realignment, expansion, <strong>TV deal negotiation</strong>.</td>
+</tr>
+<tr class="odd">
+<td><strong>TV / Media Deal</strong></td>
+<td><em>Stub</em> attached to each conference (nominal value field, unused by sim).</td>
+<td>Real contracts: value, term, distribution formula → feeds AD budgets.</td>
+</tr>
+<tr class="even">
+<td><strong>University</strong></td>
+<td>Identity (name, location, brand, prestige).</td>
+<td>Enrollment, academics affecting recruiting, brand growth.</td>
+</tr>
+<tr class="odd">
+<td><strong>Athletics Department</strong></td>
+<td><em>Thin</em>: owns the football Team, carries a budget field (unused by v1 sim).</td>
+<td><strong>Budget</strong> from media/tickets/donors → allocates to NIL pool, recruiting spend, facility/stadium projects, coaching salaries.</td>
+</tr>
+<tr class="even">
+<td><strong>Team</strong> (football)</td>
+<td>Fully modeled: roster, staff, depth chart, scheme, record — the unit we simulate.</td>
+<td>NIL spending, facility ratings affecting development, recruiting pitch.</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p><strong>Principle:</strong> v1 builds the <em>whole tree</em> but only puts behavior on <strong>Team</strong> (and the game engine). Division/Conference get the structural logic they need for scheduling &amp; postseason; University/AthleticsDepartment/TVDeal exist as data shells with the fields v2 will animate. Nothing in v1 has to be torn down to add the economy.</p>
+</blockquote>
+</section>
+<section id="the-future-economic-flow-v2-sketched-now-so-v1-doesnt-block-it" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="the-future-economic-flow-v2-sketched-now-so-v1-doesnt-block-it"><span class="header-section-number">3.3</span> The future economic flow (v2+, sketched now so v1 doesn’t block it)</h3>
+<pre><code>Conference negotiates TV/Media Deal
+        │  (revenue distribution)
+        ▼
+Athletics Department budget  ◀── + ticket sales, donors, NCAA/bowl payouts
+        │  (allocation)
+        ├─► NIL pool          ─► recruiting &amp; transfer-portal competitiveness
+        ├─► Recruiting spend   ─► prospect reach &amp; evaluation
+        ├─► Facilities/Stadium ─► player development, gameday advantage, revenue
+        └─► Coaching salaries  ─► hiring/retaining better coach attribute sheets</code></pre>
+<p>This is <strong>not in v1</strong>, but every box maps to an entity in <a href="#sec-pyramid" class="quarto-xref">Section&nbsp;3.1</a> — so v2 is <em>populating fields and adding services</em>, not restructuring the world.</p>
+</section>
+</section>
+<section id="sec-resolution" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-resolution"><span class="header-section-number">4</span> The Resolution System (d20 + DC)</h2>
+<p>The beating heart of the engine. A single, reusable check resolves every contested football event.</p>
+<section id="the-check" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-check"><span class="header-section-number">4.1</span> The check</h3>
+<pre><code>roll  = d20  (1–20)
+total = roll + attributeModifier + situationalModifiers
+result:
+    roll == 20            → CRITICAL SUCCESS   (best-case outcome, ignores DC)
+    roll == 1             → CRITICAL FAILURE   (blunder: fumble, sack, blown coverage)
+    total &gt;= DC           → SUCCESS
+    total &lt;  DC           → FAILURE
+margin = total - DC       (used to scale magnitude, e.g. yards gained)</code></pre>
+<ul>
+<li><strong>Attribute modifier:</strong> derived from the relevant attribute(s) (see <a href="#sec-attributes" class="quarto-xref">Section&nbsp;8</a>). BG3-style: <code>mod = floor((attr - 10) / 2)</code> is our starting curve, but we keep this in one tunable function so we can reshape it.</li>
+<li><strong>DC:</strong> set by the <em>opposing</em> unit/player’s relevant attributes plus situation. A run block is <code>OL.RunBlock</code> checked against a DC derived from <code>DL.BlockShed</code>.</li>
+<li><strong>Advantage / Disadvantage:</strong> roll 2d20, take higher (advantage) or lower (disadvantage). Granted by scheme fit, coaching edges, momentum, home crowd, fatigue mismatches. This is how we express “edges” without inflating raw numbers.</li>
+<li><strong>Margin scales magnitude.</strong> Beating a DC by 1 ≠ beating it by 12. A run play’s yardage, a pass’s air yards, all scale off <code>margin</code> through a transfer curve.</li>
+</ul>
+</section>
+<section id="determinism-reproducibility" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="determinism-reproducibility"><span class="header-section-number">4.2</span> Determinism &amp; reproducibility</h3>
+<p>All randomness flows through a <strong>single seeded <code>RandomNumberGenerator</code></strong> owned by the simulation context. Same save + same seed + same inputs ⇒ identical game. Essential for debugging, save integrity, and “replay this game” later. We <strong>never</strong> call <code>GD.Randi()</code> / global RNG inside sim logic.</p>
+</section>
+<section id="why-this-and-not-probability-tables" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="why-this-and-not-probability-tables"><span class="header-section-number">4.3</span> Why this and not probability tables</h3>
+<p>A play-by-play d20 engine gives us legible, debuggable outcomes (“OL_LeftGuard failed RunBlock check vs DT, DC 16, rolled 7+4=11 → penetration, RB tackled for -2”) and a uniform mechanic across blocking, coverage, tackling, kicking, and decision-making. Tuning happens in <em>modifier curves</em> and <em>DC tables</em>, isolated from the dice.</p>
+</section>
+</section>
+<section id="sec-layers" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-layers"><span class="header-section-number">5</span> Simulation Layers (top-down)</h2>
+<p>The sim is a nest of loops, each layer producing events the layer below resolves. Each layer is its own service so it can be tested in isolation.</p>
+<pre><code>SeasonSimulator
+  └─ for each week:
+       WeekSimulator
+         └─ for each scheduled game:
+              GameSimulator                      ← clock, score, possession, weather
+                └─ DriveSimulator                ← field position, drive state
+                     └─ PlaySimulator            ← chooses play, runs the play
+                          ├─ PlayCaller          ← offense/defense pick plays (coach attrs + situation)
+                          └─ PlayResolver        ← d20 checks → yards / TO / score / penalty
+                               └─ CheckResolver  ← the d20-vs-DC primitive
+  └─ after regular season: ConferenceChampionships → CFPBracket → bowls → Champion
+  └─ after each week: update stats, standings, rankings, injuries, fatigue recovery
+  └─ after the season: OffseasonStage
+        ├─ archive completed season → historical state
+        ├─ advance class years · graduate &amp; depart seniors
+        ├─ PlayerGenerator → fill open slots with walk-ons (v1 recruiting placeholder)
+        └─ build next Season → loop   (v1 runs season after season)</code></pre>
+<p>Key idea: <strong>PlayResolver composes many CheckResolver calls.</strong> A single pass play might resolve: protection (OL vs DL checks) → QB decision (Awareness check) → throw (Accuracy vs DC from distance/coverage) → catch (Catching vs DC from coverage/contact) → YAC (Agility vs Tackling). Each is one d20 check; the play outcome is their composition.</p>
+</section>
+<section id="sec-events" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-events"><span class="header-section-number">6</span> Event-Driven Architecture &amp; Side Effects</h2>
+<p>Game modules don’t reach into each other’s side effects. The simulation <strong>emits typed domain events</strong>, and independent subscribers react. This keeps the sim core ignorant of presentation, media, stats, and everything else — they’re all just listeners.</p>
+<ul>
+<li><strong>Producers:</strong> the simulators emit domain events as things happen — <code>GameConcluded</code>, <code>WeekAdvanced</code>, <code>UpsetOccurred</code>, <code>RankingsUpdated</code>, <code>PlayerInjured</code>, <code>RecordBroken</code>, <code>SeasonConcluded</code>.</li>
+<li><strong>Bus:</strong> <code>EventBus</code> (autoload) dispatches events to subscribers (typed C# events / Godot signals).</li>
+<li><strong>Consumers (side effects):</strong> the <strong>Media &amp; Narrative subsystem</strong> (<a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>) is the flagship consumer; stats aggregation, standings/rankings refresh, injury bookkeeping, and — later — achievements, awards watches, and recruiting buzz all hang off the same events.</li>
+</ul>
+<p>Two rules keep this clean:</p>
+<ol type="1">
+<li><strong>Events are facts, not commands.</strong> A producer announces <em>what happened</em>; it never knows who listens. Adding a new consumer means <em>subscribing</em>, not editing the sim.</li>
+<li><strong>Consumers never mutate state the sim depends on.</strong> Side effects are strictly downstream. The deterministic core (sim + seeded RNG) is the single source of truth; consumers read events and produce their <em>own</em> artifacts (articles, stat tables, UI updates). This is exactly what lets non-deterministic work like LLM text generation live in the system without breaking “same seed ⇒ same season.”</li>
+</ol>
+<p>Consumers may also process events <strong>asynchronously on worker threads</strong> (e.g.&nbsp;narrative generation between weeks), so advancing the season never blocks on a side effect.</p>
+<pre><code>SeasonSimulator / GameSimulator ──emit──▶ EventBus
+                                            │  (GameConcluded, WeekAdvanced, UpsetOccurred …)
+                ┌──────────────┬────────────┴───────────┬──────────────────┐
+                ▼              ▼                         ▼                  ▼
+         StatAggregator   RankingService          MediaSubsystem      (future: awards,
+                                                  (async / threaded)   achievements, buzz)</code></pre>
+</section>
+<section id="sec-media" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-media"><span class="header-section-number">7</span> Media &amp; Narrative Subsystem</h2>
+<p>An <strong>in-game ESPN-style site</strong> for immersion: weekly recaps, season storylines, a <strong>Featured</strong> tab, and the ability to look up <strong>your team or any other team</strong> and read its coverage. It is pure presentation — a consumer of <a href="#sec-events" class="quarto-xref">Section&nbsp;6</a>, derived from deterministic <code>GameResult</code> data.</p>
+<p><strong>Pipeline (between weeks, in the background):</strong></p>
+<ol type="1">
+<li><code>WeekAdvanced</code> / <code>GameConcluded</code> events land on the <code>EventBus</code>.</li>
+<li><code>MediaSubsystem</code> builds a <strong><code>NarrativeContext</code></strong> per story — the facts a writer needs: final score, key plays, standout stat lines, standings/ranking implications, streaks, rivalry/upset flags.</li>
+<li>A <strong>tiering pass</strong> decides coverage and article type (game recap, upset alert, ranking shake-up, season storyline).</li>
+<li>The chosen <code>INarrativeGenerator</code> turns each <code>NarrativeContext</code> into a <code>NewsArticle</code>.</li>
+<li>Articles are written to the <strong>sidecar media cache</strong> and surfaced in the Media menu.</li>
+</ol>
+<p>Steps 2–5 run <strong>off the main thread</strong>, kicked off when a week concludes, so the player can keep advancing; articles stream into the Media menu as they finish.</p>
+<p><strong>Coverage tiering</strong> (quality-per-compute; scales to ~65 games/week): featured / Top-25 / rivalry / upset / user-team games get <strong>full articles</strong>; everything else gets a <strong>short templated recap + box score</strong>. The Featured tab surfaces the week’s biggest stories.</p>
+<p><strong>Pluggable generation — <code>INarrativeGenerator</code>:</strong></p>
+<ul>
+<li><code>TemplateNarrativeGenerator</code> — <strong>v1 baseline.</strong> Deterministic, instant, no model dependency; fills authored templates from the <code>NarrativeContext</code>. Always available, and the fallback for low-tier games.</li>
+<li><code>LlmNarrativeGenerator</code> — <strong>drop-in upgrade.</strong> A small local model (~7B) via <strong>LLamaSharp</strong> loading a bundled <strong>GGUF</strong>, fully on-device (no 3rd-party API, no per-call cost). It’s handed a constrained <strong>“script”</strong>: a structured prompt that injects the <code>NarrativeContext</code> facts and dictates format/length/tone, so a small model stays factual and on-brand. Slots in behind the same interface with zero changes elsewhere.</li>
+</ul>
+<p>This mirrors the <code>PlayCaller</code>-as-interface pattern (<a href="#sec-forward-compat" class="quarto-xref">Section&nbsp;12</a>): the consumer is stable; the implementation swaps.</p>
+<p><strong>Determinism boundary.</strong> Articles are <em>artifacts</em>, never inputs — regenerating one can’t change a score or a standing. Persisting them (below) also means a reloaded save shows the <em>same</em> text the player first read.</p>
+<p><strong>Storage — sidecar media cache.</strong> Articles persist in a per-save media store separate from the core <code>SaveGame</code> (e.g.&nbsp;<code>user://saves/&lt;slot&gt;.media</code>), keyed by week + team + article id. It survives reload, lets the user re-read past coverage, and keeps the core save lean.</p>
+</section>
+<section id="sec-attributes" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-attributes"><span class="header-section-number">8</span> Attribute &amp; Skill Model (BG3-inspired)</h2>
+<p>No overall rating. A <code>Player</code> carries <strong>core attributes</strong> (broad, slow-changing, BG3’s six-stat analog) and <strong>position skills</strong> (specific, what actually gets checked on a play).</p>
+<section id="core-attributes-every-player-has-these" class="level3" data-number="8.1">
+<h3 data-number="8.1" class="anchored" data-anchor-id="core-attributes-every-player-has-these"><span class="header-section-number">8.1</span> Core attributes (every player has these)</h3>
+<p>The working set (numbers, scale, and the blend math live in <a href="./mechanics.html">Mechanics</a>):</p>
+<ul>
+<li><strong>Strength</strong> — power blocking, breaking/making tackles, press.</li>
+<li><strong>Agility</strong> — change of direction, route breaks, shedding.</li>
+<li><strong>Speed</strong> — straight-line; gates breakaways and pursuit.</li>
+<li><strong>Awareness</strong> — football IQ; reads, audibles, coverage recognition, penalty avoidance.</li>
+<li><strong>Durability</strong> — injury-resistance &amp; fatigue curve (not a per-play check; modifies injury/fatigue rolls).</li>
+<li><strong>Composure</strong> — performance under pressure (late game, hostile crowd, big stage); affects advantage/disadvantage.</li>
+</ul>
+</section>
+<section id="position-skills-subset-relevant-per-position" class="level3" data-number="8.2">
+<h3 data-number="8.2" class="anchored" data-anchor-id="position-skills-subset-relevant-per-position"><span class="header-section-number">8.2</span> Position skills (subset relevant per position)</h3>
+<p>Examples (full matrix → attributes reference):</p>
+<ul>
+<li>QB: ThrowPower, ShortAccuracy, DeepAccuracy, PlayAction, Scramble, ReadProgression.</li>
+<li>RB: Vision, Elusiveness, Trucking, BallSecurity, PassBlock, Receiving.</li>
+<li>WR/TE: RouteRunning, Catching, ContestedCatch, Release, RunBlock (TE).</li>
+<li>OL: RunBlock, PassBlock, PullSpeed, AnchorStrength.</li>
+<li>DL/EDGE: BlockShed, PassRush, RunStop, Pursuit.</li>
+<li>LB: Coverage, RunStop, Blitz, Tackling.</li>
+<li>DB: ManCoverage, ZoneCoverage, BallSkills, PressTechnique, Tackling.</li>
+<li>ST: KickPower, KickAccuracy, PuntPower, Returns.</li>
+</ul>
+<p>A check looks up the <em>relevant skill</em> (or a blend of skill + core attribute) for both participants and resolves through the system in <a href="#sec-resolution" class="quarto-xref">Section&nbsp;4</a>.</p>
+</section>
+<section id="coaches-staff" class="level3" data-number="8.3">
+<h3 data-number="8.3" class="anchored" data-anchor-id="coaches-staff"><span class="header-section-number">8.3</span> Coaches &amp; staff</h3>
+<p>Coaches are character sheets too — no “overall.” Attributes such as: <strong>OffensiveAcumen, DefensiveAcumen, PlayCalling (aggression/tendency), Development (per-position growth bias), Discipline (penalty rate), GameManagement (clock/timeouts/4th-down), Recruiting (stubbed for v1), Motivation (Composure/advantage buffs)</strong>. Coach attributes feed the <strong>PlayCaller</strong> (what plays get chosen) and grant <strong>advantage/disadvantage</strong> at the check layer, rather than directly editing player numbers mid-game.</p>
+</section>
+<section id="derived-vs.-stored" class="level3" data-number="8.4">
+<h3 data-number="8.4" class="anchored" data-anchor-id="derived-vs.-stored"><span class="header-section-number">8.4</span> Derived vs.&nbsp;stored</h3>
+<p>We store <em>attributes</em>. We <em>derive</em> any “rating-like” number on demand (e.g.&nbsp;a scouting view) from attributes through a position-weighted function — never the reverse. This keeps the BG3 ethos intact and means a “rating” is just one lens on the sheet.</p>
+</section>
+<section id="sec-player-gen" class="level3" data-number="8.5">
+<h3 data-number="8.5" class="anchored" data-anchor-id="sec-player-gen"><span class="header-section-number">8.5</span> Player generation (initial rosters &amp; walk-ons)</h3>
+<p>Rosters aren’t hand-authored — a deterministic <strong><code>PlayerGenerator</code></strong> builds them, drawing on the seeded RNG (<a href="#sec-resolution" class="quarto-xref">Section&nbsp;4</a>) so a given save reproduces the same players. It serves two jobs:</p>
+<ol type="1">
+<li><strong>Initial league fill</strong> at new-save: ~130 FBS teams’ worth of players with position-appropriate attribute/skill sheets, class years, names, and physicals.</li>
+<li><strong>Walk-on replenishment</strong> each offseason: the v1 stand-in for recruiting — open scholarship/depth slots are filled with generated <strong>walk-ons</strong> so rosters stay whole season to season.</li>
+</ol>
+<p>Generation is <strong>prestige-weighted</strong>: higher-prestige programs draw from stronger distributions, a rough proxy for recruiting pull until real recruiting arrives. The generator is also the seam recruiting plugs into later — a <code>RecruitingService</code> replaces the <em>walk-on</em> step (job 2) without touching initial generation (job 1, which still seeds new leagues and, eventually, lower divisions).</p>
+</section>
+</section>
+<section id="sec-data-model" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="sec-data-model"><span class="header-section-number">9</span> Data Model — Core Classes</h2>
+<p>In Godot+C#, the persistent data model is built from <strong>custom <code>Resource</code> types</strong> (<code>[GlobalClass] public partial class X : Resource</code>). Resources serialize cleanly via <code>ResourceSaver</code>/<code>ResourceLoader</code>, show in the editor inspector, and are the idiomatic Godot way to hold game data. Pure-logic services (simulators) are <strong>plain C# classes</strong>, not nodes — they take data in and return results, keeping them unit-testable without the scene tree.</p>
+<pre><code>Resource (data — serialized)
+├─ Player              : attributes, skills, position, class/year, depth slot, fatigue,
+│                         injury status; current-season stats live in the season sidecar,
+│                         career stat lines archive to the historical sidecar (by player ID)
+├─ Coach               : role (HC/OC/DC), attributes, tendencies
+├─ StaffMember         : trainers/specialists as attribute bundles (lightweight in v1)
+├─ Team                : identity (name, abbr, colors, venue, prestige),
+│                         roster (Player[]), staff, depth chart, scheme/gameplan, record
+├─ AthleticsDepartment : owns the Team; budget field (thin in v1 — see World Hierarchy)
+├─ University          : institution identity/brand; owns its AthleticsDepartment
+├─ TVDeal              : media-rights stub attached to a Conference (thin in v1)
+├─ Conference          : member universities/teams, divisions/pods, tiebreak rules,
+│                         champ-game config, TVDeal
+├─ Division            : competitive tier (FBS for v1); member conferences, postseason/CFP rules
+├─ League              : root world container (holds the FBS Division in v1)
+├─ Schedule            : weeks → list of Matchup (home, away, site, week, type)
+├─ GameResult          : final score, box score, play log (empty when quick-simmed), key events
+├─ Season              : year, current week, Schedule, standings, rankings, postseason state
+└─ SaveGame (spine)    : entity registry (ID→sidecar) · user team id · current-season
+                          pointer · RNG seed/state · schema version · sidecar manifest
+                          (bulk data lives in sidecars it references by ID — see @sec-storage)
+
+Plain C# (logic — not serialized)
+├─ SeasonSimulator / WeekSimulator / GameSimulator / DriveSimulator / PlaySimulator
+├─ PlayCaller (offense + defense)
+├─ PlayResolver
+├─ CheckResolver           ← the d20-vs-DC primitive
+├─ RankingService, StandingsService, TiebreakService
+├─ CfpBracketBuilder, ScheduleBuilder
+├─ StatAggregator
+├─ PlayerGenerator             ← deterministic roster &amp; walk-on generation (@sec-player-gen)
+├─ OffseasonStage              ← archive → age roster → walk-on replenish → next season
+├─ SaveManager + ISaveModule   ← spine + per-module sidecar load/save (@sec-storage)
+├─ EventBus + typed domain events (GameConcluded, WeekAdvanced, UpsetOccurred, …)
+└─ MediaSubsystem + INarrativeGenerator (TemplateNarrativeGenerator | LlmNarrativeGenerator)</code></pre>
+<blockquote class="blockquote">
+<p><strong>C# serialization note:</strong> Fields meant to persist must be Godot-visible — use <code>[Export]</code> properties and Godot collection types (<code>Godot.Collections.Array&lt;T&gt;</code>, <code>Godot.Collections.Dictionary</code>) on <code>Resource</code> subclasses, since plain <code>List&lt;T&gt;</code>/.NET dictionaries don’t serialize through <code>ResourceSaver</code>. Confirmed against Godot 4.6 docs.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p><strong>Media types</strong> (see <a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>): <code>NewsArticle : Resource</code> (headline, body, type, week, team refs, timestamp) lives in the per-save <strong>sidecar media cache</strong>, <em>not</em> the core <code>SaveGame</code> graph. The <code>EventBus</code>, domain events, <code>MediaSubsystem</code>, and <code>INarrativeGenerator</code> (<code>TemplateNarrativeGenerator</code> / <code>LlmNarrativeGenerator</code>) are plain C#.</p>
+</blockquote>
+</section>
+<section id="sec-storage" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="sec-storage"><span class="header-section-number">10</span> Storage &amp; Save Architecture</h2>
+<p>Over a long, multi-season run the interesting data — detailed stats, player career logs, season history — only grows. To keep the hot path small and let that complexity expand gracefully, a save is <strong>not one monolithic file</strong>. It’s a thin <strong>spine</strong> plus a set of per-module <strong>sidecars</strong>, generalizing the media-cache pattern.</p>
+<section id="the-spine-main-save-file" class="level3" data-number="10.1">
+<h3 data-number="10.1" class="anchored" data-anchor-id="the-spine-main-save-file"><span class="header-section-number">10.1</span> The spine (main save file)</h3>
+<p>Small, always loaded first. Holds only what’s needed to bootstrap and to resolve everything else:</p>
+<ul>
+<li><strong>Entity registry</strong> — <code>ID → name → which sidecar</code> for every entity. The one piece of glue that lets sidecars reference each other <em>without knowing about each other’s files</em>.</li>
+<li><strong>Pointers &amp; identity</strong> — user team, current-season pointer, settings.</li>
+<li><strong>RNG seed + state</strong> — so a resumed save continues deterministically (<a href="#sec-resolution" class="quarto-xref">Section&nbsp;4</a>).</li>
+<li><strong>Schema version + sidecar manifest</strong> — which files belong to this save, and at what version.</li>
+</ul>
+<p>The original plan was <code>ResourceSaver</code>/<code>ResourceLoader</code> (<code>.tres</code>/<code>.res</code>).</p>
+<blockquote class="blockquote">
+<p><strong>As built (M5):</strong> to keep <code>CfbSim.Core</code> engine-free and headlessly testable, persistence is implemented as <strong>portable JSON</strong> (<code>System.Text.Json</code>) inside the core — one file per sidecar (<code>spine.json</code>, <code>league.json</code>, <code>season.json</code>, <code>history.json</code>, <code>archive.json</code>, <code>media.json</code>), written atomically (temp + rename) and version-stamped via the spine. The Godot side just hands the core a globalized <code>user://saves/&lt;slot&gt;</code> path. Same spine-plus-sidecars shape, just a different (Godot-independent) serializer. Box scores are an exception — kept in a per-session memory cache, not yet persisted.</p>
+</blockquote>
+</section>
+<section id="module-sidecars-v1-partition" class="level3" data-number="10.2">
+<h3 data-number="10.2" class="anchored" data-anchor-id="module-sidecars-v1-partition"><span class="header-section-number">10.2</span> Module sidecars (v1 partition)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sidecar</th>
+<th>Holds</th>
+<th>Loaded when</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>current-state</strong></td>
+<td>The world as it is now: teams, rosters, players’ current attributes, staff, depth charts, schemes, prestige.</td>
+<td>At load — it’s the live league.</td>
+</tr>
+<tr class="even">
+<td><strong>season-state</strong></td>
+<td>The in-flight season: schedule, results, standings, rankings, week pointer, postseason bracket, current-season stats.</td>
+<td>While playing a season.</td>
+</tr>
+<tr class="odd">
+<td><strong>historical-state</strong></td>
+<td>Completed seasons: final standings, champions, year-by-year team records, archived player <strong>career</strong> stat lines.</td>
+<td>When browsing history / records.</td>
+</tr>
+<tr class="even">
+<td><strong>media</strong></td>
+<td><code>NewsArticle</code>s, keyed by week + team (<a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>).</td>
+<td>When the Media menu opens.</td>
+</tr>
+<tr class="odd">
+<td><strong>stats-index</strong></td>
+<td>Cross-cutting rollups: league leaders, all-time records.</td>
+<td>For leaderboards; updated incrementally.</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p><strong>Don’t over-shard.</strong> This five-way split is the <em>whole</em> v1 partition — not a sidecar per entity. Granularity is a knob we turn later (see <em>Growing complexity</em>, below).</p>
+</blockquote>
+</section>
+<section id="the-one-rule-that-makes-it-work-reference-by-id-never-by-pointer" class="level3" data-number="10.3">
+<h3 data-number="10.3" class="anchored" data-anchor-id="the-one-rule-that-makes-it-work-reference-by-id-never-by-pointer"><span class="header-section-number">10.3</span> The one rule that makes it work: reference by ID, never by pointer</h3>
+<p>The trap isn’t “this data references other data” — almost everything does. The trap is <strong>two files that must be loaded together</strong>. We avoid it with a single discipline:</p>
+<ul>
+<li><strong>Cross-module links are stored as IDs</strong> (<code>StringName</code>/<code>int</code>), never as live <code>Resource</code> references.</li>
+<li><strong>IDs are resolved through the spine’s registry</strong>, which says which sidecar holds the target and loads it on demand. A sidecar references <em>IDs</em>, not <em>other sidecars</em> — they never point at each other directly, and none needs a sibling eagerly loaded to deserialize.</li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Godot specifics:</strong> if a <code>Resource</code> <code>@export</code>s another <code>Resource</code>, loading the parent eagerly pulls the child — exactly the coupling we don’t want across modules. So cross-module fields are plain ID values, resolved with <code>ResourceLoader.Load</code> on demand. <em>Within</em> a module, real sub-resource references are fine.</p>
+</blockquote>
+</section>
+<section id="the-cross-cutting-exception" class="level3" data-number="10.4">
+<h3 data-number="10.4" class="anchored" data-anchor-id="the-cross-cutting-exception"><span class="header-section-number">10.4</span> The cross-cutting exception</h3>
+<p>Some data is <em>owned</em> by one module but <em>queried across all</em> — national stat leaders, all-time records. Rebuilding those by loading every team’s sidecar would defeat the purpose, so they get a dedicated <strong>stats-index</strong>, maintained <strong>incrementally</strong> as domain events fire (<a href="#sec-events" class="quarto-xref">Section&nbsp;6</a>). It’s the one deliberate central rollup.</p>
+</section>
+<section id="growing-complexity-over-time" class="level3" data-number="10.5">
+<h3 data-number="10.5" class="anchored" data-anchor-id="growing-complexity-over-time"><span class="header-section-number">10.5</span> Growing complexity over time</h3>
+<p>When a module’s dataset becomes genuinely heavy — say, full play-by-play career logs per player — it’s promoted to <strong>its own sidecar</strong>, referenced by ID like everything else. No other module changes; the registry just learns a new mapping. That’s the whole point: we can deepen stat-keeping and history <em>without</em> a migration that touches the rest of the game.</p>
+</section>
+<section id="integrity" class="level3" data-number="10.6">
+<h3 data-number="10.6" class="anchored" data-anchor-id="integrity"><span class="header-section-number">10.6</span> Integrity</h3>
+<ul>
+<li><strong>Atomic writes:</strong> each sidecar is written to a temp file and renamed into place, so a crash mid-save can’t leave a half-written file.</li>
+<li><strong>Version-stamping:</strong> every sidecar carries the spine’s save/schema version; a mismatch on load is detectable (and migratable).</li>
+<li><strong>One abstraction, paid once:</strong> every module implements the same <code>ISaveModule</code> (<code>Save</code> / <code>Load</code> / <code>version</code>), so the machinery lives in one <code>SaveManager</code> and each module stays trivial — keeping this from becoming “significant complexity.”</li>
+</ul>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TB
+  subgraph SPINE["Main save · the spine (small, always loaded)"]
+    REG["Entity registry&lt;br/&gt;ID → name → sidecar"]
+    META["user team · current-season pointer&lt;br/&gt;RNG state · schema version · manifest"]
+  end
+
+  CUR["current-state sidecar&lt;br/&gt;teams · rosters · staff · depth charts"]
+  SEA["season-state sidecar&lt;br/&gt;schedule · results · standings · bracket"]
+  HIS["historical-state sidecar&lt;br/&gt;past seasons · champions · career stats"]
+  MED["media sidecar&lt;br/&gt;NewsArticles"]
+  IDX["stats-index sidecar&lt;br/&gt;league leaders · records"]
+
+  SPINE ==&gt;|loads on demand| CUR
+  SPINE ==&gt;|loads on demand| SEA
+  SPINE ==&gt;|loads on demand| HIS
+  SPINE ==&gt;|loads on demand| MED
+  SPINE ==&gt;|loads on demand| IDX
+
+  CUR -.-&gt;|IDs resolved via registry| REG
+  SEA -.-&gt;|IDs resolved via registry| REG
+  HIS -.-&gt;|IDs resolved via registry| REG
+  MED -.-&gt;|IDs resolved via registry| REG
+  IDX -.-&gt;|IDs resolved via registry| REG
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>This refines the earlier single-<code>SaveGame</code>-graph idea: the <code>SaveGame</code> resource is now the <strong>spine</strong>, and the bulk lives in sidecars it references by ID. (We still avoid the node-group <code>save()</code>/JSON-line pattern from the Godot docs — that suits scene-tree-resident state; our model is data Resources, which <code>ResourceSaver</code> handles directly.)</p>
+</section>
+</section>
+<section id="sec-structure" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="sec-structure"><span class="header-section-number">11</span> Project Structure &amp; Runtime Composition</h2>
+<pre><code>CollegeFootballSimGoDot.sln
+CollegeFootballSimGoDot.csproj   ← Godot game project (Godot.NET.Sdk); references the core
+project.godot
+/src
+  /Game            ← Godot-side C# only: Nodes, UI, autoloads, Resource adapters
+  /CfbSim.Core     ← engine-free .NET class library — the simulation:
+     /Rng /Dice /Ratings /Checks /Model /Generation /Sim
+     (later: /Services /Save)
+/tests
+  /CfbSim.Tests    ← xUnit, fully headless (dotnet test)
+/samples
+  /CfbSim.Demo     ← console runner for quick play traces
+/docs              ← this Quarto design-doc site
+/data              ← .tres data assets: teams, conferences, schedule templates</code></pre>
+<blockquote class="blockquote">
+<p><strong>Core/engine split (refinement, in place since M1):</strong> the simulation lives in a <strong><code>CfbSim.Core</code> class library with <em>zero</em> Godot dependency</strong>, so it’s unit-testable headlessly with <code>dotnet test</code> (no scene tree, no engine). The Godot project references it. Consequently the <strong>domain model is plain C# for now</strong>; Godot <code>Resource</code> types and serialization (<a href="#sec-storage" class="quarto-xref">Section&nbsp;10</a>) are introduced at the persistence boundary (<strong>M5</strong>), either by adding the <code>Resource</code> base to the model or via thin adapter Resources. Randomness uses our own seeded PCG32 (<code>IRng</code>) rather than Godot’s RNG, which keeps the core engine-free <em>and</em> gives stronger cross-platform reproducibility.</p>
+</blockquote>
+<p><strong>Autoload singletons (Godot autoloads):</strong></p>
+<ul>
+<li><code>GameManager</code> — owns the active <code>SaveGame</code>, current screen flow, new-game/continue.</li>
+<li><code>SimDriver</code> — bridges UI requests (“sim this week”, “sim to end of season”) to the plain-C# simulators and surfaces results/events.</li>
+<li><code>EventBus</code> — the domain-event hub (<a href="#sec-events" class="quarto-xref">Section&nbsp;6</a>). Simulators emit typed events; UI, stats, rankings, and the Media subsystem all subscribe — the sim never knows who listens.</li>
+<li><code>MediaSubsystem</code> — listens for game/week events and generates narratives on a <strong>background thread</strong> into the sidecar media cache, feeding the Media menu (<a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>).</li>
+</ul>
+<p>The simulators themselves stay out of the scene tree — autoloads are thin coordinators that own data and call into pure logic.</p>
+</section>
+<section id="sec-forward-compat" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="sec-forward-compat"><span class="header-section-number">12</span> Forward-Compatibility Hooks (so v2+ doesn’t require a rewrite)</h2>
+<p>We don’t <em>build</em> these in v1, but the architecture must not preclude them:</p>
+<ul>
+<li><strong>The full world hierarchy already exists</strong> (<a href="#sec-world" class="quarto-xref">Section&nbsp;3</a>) — Division/Conference/University/AthleticsDepartment/Team — so adding FCS→JUCO is new <em>data</em>, and the v2 economy (TV deals → budgets → NIL/recruiting/facilities) is new <em>services on existing entities</em>, not a restructure.</li>
+<li><strong>PlayCaller is an interface</strong> — a <code>UserPlayCaller</code> can replace the AI for the user’s team later (live play-calling) without touching <code>PlayResolver</code>.</li>
+<li><strong>The same play-by-play engine backs both watch and quick-sim</strong> (quick-sim just discards the play log), so spectator mode for non-player games is later a UI toggle to retain that log, not a new engine.</li>
+<li><strong>The event-driven core (<a href="#sec-events" class="quarto-xref">Section&nbsp;6</a>) is open for new consumers</strong> — achievements, awards watches, social-media buzz, recruiting interest — which <em>subscribe</em> to existing events rather than touching the sim.</li>
+<li><strong><code>INarrativeGenerator</code> lets the on-device LLM writer replace the templated baseline</strong> (<a href="#sec-media" class="quarto-xref">Section&nbsp;7</a>) with no changes anywhere else.</li>
+<li><strong>The offseason stage is real in v1</strong> (walk-on replenishment) — so recruiting, the transfer portal, and the coaching carousel plug into an <em>existing</em> seam, not a new one. A <code>RecruitingService</code> later replaces <code>PlayerGenerator</code>’s walk-on step behind the same call.</li>
+<li><strong>Player already carries class/year + career history</strong>, and the historical sidecar already archives it, so richer progression/aging is added depth, not new plumbing.</li>
+<li><strong>New per-module sidecars can be added without touching existing ones</strong> (<a href="#sec-storage" class="quarto-xref">Section&nbsp;10</a>) — by-ID references resolved through the registry mean a future heavy dataset (e.g.&nbsp;detailed player career logs) just becomes its own sidecar.</li>
+<li><strong>Everything resolves through <code>CheckResolver</code></strong>, so balance changes are localized to modifier/DC curves.</li>
+</ul>
+</section>
+<section id="sec-open-questions" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="sec-open-questions"><span class="header-section-number">13</span> Open Questions (to resolve before/while building)</h2>
+<ol type="1">
+<li><strong>Exact attribute &amp; skill list</strong> — needs its own attributes reference and the position→skill matrix + the <code>attr → modifier</code> and <code>margin → yards</code> curves.</li>
+<li><strong>Play catalog</strong> — how granular is the playbook? (formations + concepts vs.&nbsp;abstract “run inside / play-action deep” buckets). Affects PlayCaller complexity.</li>
+<li><strong>Clock &amp; game-flow fidelity</strong> — real play-clock/game-clock model, quarter length scaling, hurry-up/2-minute logic.</li>
+<li><strong>Penalties &amp; special teams depth</strong> for v1.</li>
+<li><strong>Data sourcing &amp; generation</strong> — where real FBS team/conference identity data comes from, and the <code>PlayerGenerator</code> distributions (per-position, prestige-weighted) that yield believable initial rosters and walk-ons.</li>
+<li><strong>CFP format specifics</strong> — pin the exact current bracket/seeding/bye rules and conference-champ auto-bids.</li>
+<li><strong>Quick-sim performance</strong> — confirm full-engine quick-sim of a whole week (~65 games) is fast enough, or whether an abstracted fast path is needed.</li>
+<li><strong>Local-LLM specifics</strong> — which ~7B model, quantization/size vs.&nbsp;quality, GGUF licensing for redistribution, and the per-week background-generation time budget.</li>
+<li><strong>Narrative “script” design</strong> — the structured prompt/template per article type, and hallucination guardrails that constrain the model to <code>NarrativeContext</code> facts.</li>
+<li><strong>Offseason depth &amp; save growth</strong> — does v1’s offseason apply any development/aging or strictly advance years + walk-on replenish? And what’s the expected sidecar (esp.&nbsp;historical) growth over many seasons?</li>
+</ol>
+<p>These are tracked as the next design passes; none block agreeing on the architecture above.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/wfowle-ilabs\.github\.io\/CollegeFootballSimulator\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Home">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Home</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./mechanics.html" class="pagination-link" aria-label="Mechanics — Checks, Ratings &amp; the Inside Run">
+        <span class="nav-page-text">Mechanics — Checks, Ratings &amp; the Inside Run</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>College Football Simulator — design docs · built with Quarto</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Mechanics — Checks, Ratings &amp; the Inside Run – College Football Simulator</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./goals.html" rel="next">
+<link href="./architecture.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-9150029ec934d1cf45e0ed904b425734.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-e11ed3a3124fed09e1f211e21a312cdc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">College Football Simulator</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./architecture.html"> 
+<span class="menu-text">Architecture</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./mechanics.html"> 
+<span class="menu-text">Mechanics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./goals.html"> 
+<span class="menu-text">v1 Goals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./v1_1.html"> 
+<span class="menu-text">v1.1</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./architecture.html">Design</a></li><li class="breadcrumb-item"><a href="./mechanics.html">Mechanics — Checks, Ratings &amp; the Inside Run</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Design</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mechanics.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Mechanics — Checks, Ratings &amp; the Inside Run</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./goals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">v1 Goals &amp; Milestones</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./v1_1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">v1.1 — SimCast &amp; Playstyle Identity</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./decisions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Decisions Log</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="99">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-scale" id="toc-sec-scale" class="nav-link active" data-scroll-target="#sec-scale"><span class="header-section-number">1</span> Ratings: scale &amp; independent axes</a></li>
+  <li><a href="#sec-check" id="toc-sec-check" class="nav-link" data-scroll-target="#sec-check"><span class="header-section-number">2</span> The check primitive</a>
+  <ul class="collapse">
+  <li><a href="#sec-blend" id="toc-sec-blend" class="nav-link" data-scroll-target="#sec-blend"><span class="header-section-number">2.1</span> The blend + modifier (the math)</a></li>
+  <li><a href="#sec-advantage" id="toc-sec-advantage" class="nav-link" data-scroll-target="#sec-advantage"><span class="header-section-number">2.2</span> Advantage / disadvantage (the favorite lever)</a></li>
+  </ul></li>
+  <li><a href="#sec-inside-run" id="toc-sec-inside-run" class="nav-link" data-scroll-target="#sec-inside-run"><span class="header-section-number">3</span> The inside-run recipe</a>
+  <ul class="collapse">
+  <li><a href="#sec-run-push" id="toc-sec-run-push" class="nav-link" data-scroll-target="#sec-run-push"><span class="header-section-number">3.1</span> 1. The push (trenches)</a></li>
+  <li><a href="#sec-run-second" id="toc-sec-run-second" class="nav-link" data-scroll-target="#sec-run-second"><span class="header-section-number">3.2</span> 2. The second level</a></li>
+  <li><a href="#sec-run-open" id="toc-sec-run-open" class="nav-link" data-scroll-target="#sec-run-open"><span class="header-section-number">3.3</span> 3. Open field</a></li>
+  </ul></li>
+  <li><a href="#sec-yards" id="toc-sec-yards" class="nav-link" data-scroll-target="#sec-yards"><span class="header-section-number">4</span> Margin → yards (first pass)</a></li>
+  <li><a href="#sec-example" id="toc-sec-example" class="nav-link" data-scroll-target="#sec-example"><span class="header-section-number">5</span> Worked example</a></li>
+  <li><a href="#sec-generator" id="toc-sec-generator" class="nav-link" data-scroll-target="#sec-generator"><span class="header-section-number">6</span> PlayerGenerator (basic)</a></li>
+  <li><a href="#sec-m1-locks" id="toc-sec-m1-locks" class="nav-link" data-scroll-target="#sec-m1-locks"><span class="header-section-number">7</span> What this locks for M1</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./architecture.html">Design</a></li><li class="breadcrumb-item"><a href="./mechanics.html">Mechanics — Checks, Ratings &amp; the Inside Run</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Mechanics — Checks, Ratings &amp; the Inside Run</h1>
+<p class="subtitle lead">The M1 build spec</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>This page is the concrete spec for <strong>Milestone 1</strong> (data model + <code>PlayerGenerator</code> + a single inside-run play). It pins the numbers the <a href="./architecture.html">Architecture</a> leaves abstract: the rating scale, the blend math, DC derivation, the inside-run check chain, and the first-pass curves. Curves here are deliberately first-pass and get tuned in <strong>M9</strong> — the <em>structure</em> is what M1 commits to.</p>
+</div>
+</div>
+</div>
+<section id="sec-scale" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-scale"><span class="header-section-number">1</span> Ratings: scale &amp; independent axes</h2>
+<p>Every rating — core attributes <strong>and</strong> position skills — lives on a <strong>1–20 scale</strong> (BG3-pure). A <code>Player</code> carries two <strong>independent</strong> sets:</p>
+<ul>
+<li><strong>Core attributes</strong> (6): <code>Strength</code>, <code>Agility</code>, <code>Speed</code>, <code>Awareness</code>, <code>Durability</code>, <code>Composure</code>.</li>
+<li><strong>Position skills</strong>: the specific, checkable ratings for a position (for the inside run: OL <code>RunBlock</code>/<code>AnchorStrength</code>, DL <code>BlockShed</code>/<code>RunStop</code>, LB <code>RunStop</code>/<code>Tackling</code>, RB <code>Vision</code>/<code>Elusiveness</code>/<code>Trucking</code>/<code>BallSecurity</code>).</li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Why independent?</strong> Because checks <em>blend</em> a skill with an attribute (decision below), skills must <strong>not</strong> be derived from attributes — otherwise an attribute would count twice. The generator produces both axes with only a <em>loose</em> correlation (a fast RB tends to have higher <code>Elusiveness</code>, but they’re stored separately).</p>
+</blockquote>
+<p>The 1–20 scale is intentionally coarse and dice-dominant. Granularity comes from the <strong>blend</strong>, not from a wide scale.</p>
+</section>
+<section id="sec-check" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-check"><span class="header-section-number">2</span> The check primitive</h2>
+<p>Every contested event is one d20 check (see the <a href="./architecture.html#sec-resolution">Resolution System</a> for the philosophy):</p>
+<pre><code>roll   = d20
+total  = roll + attackerModifier
+DC     = 10 + defenderModifier          ← opposed check expressed as a static DC
+success = roll == 20  OR  (roll != 1 AND total &gt;= DC)
+margin  = total - DC                     ← scales magnitude (e.g. yards)
+crit    = roll == 20   (best-case, ignores DC)
+blunder = roll == 1    (auto-fail, triggers a bad outcome)</code></pre>
+<p>Expressing the opposed check as <code>DC = 10 + defenderMod</code> keeps it legible and BG3-flavored: the defender is a <em>passive</em> difficulty, the attacker rolls against it.</p>
+<section id="sec-blend" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="sec-blend"><span class="header-section-number">2.1</span> The blend + modifier (the math)</h3>
+<p>A side’s modifier comes from blending the relevant <strong>skill</strong> with a supporting <strong>attribute</strong>, <em>then</em> applying the curve:</p>
+<pre><code>effectiveRating = w_skill · skill + w_attr · attribute       (both 1–20)
+modifier        = floor((effectiveRating − 10) / 2)          (→ roughly −5..+5)
+
+default weights : w_skill = 0.65 , w_attr = 0.35   (per-check tunable)</code></pre>
+<p>Blending the <strong>values before the curve</strong> (not the modifiers) is what produces many distinct effective ratings from a coarse 1–20 scale.</p>
+</section>
+<section id="sec-advantage" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="sec-advantage"><span class="header-section-number">2.2</span> Advantage / disadvantage (the favorite lever)</h3>
+<p>When the two sides’ effective ratings are far apart, the stronger side rolls with <strong>advantage</strong> (2d20, take the higher); the weaker with <strong>disadvantage</strong> (take the lower):</p>
+<pre><code>if (attackerEffective − defenderEffective) &gt;= ADV_GAP   → attacker rolls advantage
+if (defenderEffective − attackerEffective) &gt;= ADV_GAP   → attacker rolls disadvantage
+ADV_GAP = 6   (first pass)</code></pre>
+<p>This is how a big talent gap makes a favorite reliably favored <em>without</em> widening the modifier range — the dice-dominant feel survives, but mismatches tilt correctly.</p>
+</section>
+</section>
+<section id="sec-inside-run" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-inside-run"><span class="header-section-number">3</span> The inside-run recipe</h2>
+<p>One handoff up the middle resolves as a short <strong>chain</strong> of checks. Each link feeds the next; a decisive win or a crit can skip ahead.</p>
+<section id="sec-run-push" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="sec-run-push"><span class="header-section-number">3.1</span> 1. The push (trenches)</h3>
+<p>The playside blocker vs the gap defender:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Attacker</th>
+<th>Defender</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Skill</td>
+<td>OL <code>RunBlock</code></td>
+<td>DL <code>BlockShed</code> / <code>RunStop</code></td>
+</tr>
+<tr class="even">
+<td>Attribute</td>
+<td><code>Strength</code></td>
+<td><code>Strength</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Success</strong> → a hole opens; <code>margin</code> sizes it (and the yards at the line).</li>
+<li><strong>Blunder (nat 1)</strong> → <strong>TFL</strong>: defender wins decisively, negative yards, chain ends.</li>
+<li><strong>Crit (nat 20)</strong> → clean lane; skip straight toward open field.</li>
+</ul>
+</section>
+<section id="sec-run-second" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="sec-run-second"><span class="header-section-number">3.2</span> 2. The second level</h3>
+<p>If the back reaches the linebackers:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Attacker</th>
+<th>Defender</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Skill</td>
+<td>RB <code>Elusiveness</code> (or <code>Trucking</code> vs power)</td>
+<td>LB <code>Tackling</code> / <code>RunStop</code></td>
+</tr>
+<tr class="even">
+<td>Attribute</td>
+<td><code>Agility</code></td>
+<td><code>Agility</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Success</strong> → broken/avoided tackle, extra yards (YAC) from <code>margin</code>.</li>
+<li><strong>Failure</strong> → tackle made near the line of scrimmage.</li>
+<li><strong>Blunder or big hit</strong> at contact (ball-carrier nat 1, <em>or</em> a failure by a large margin) → trigger a <strong>fumble check</strong>: RB <code>BallSecurity</code> ⊕ <code>Composure</code> vs a fumble DC; failure = turnover.</li>
+</ul>
+</section>
+<section id="sec-run-open" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="sec-run-open"><span class="header-section-number">3.3</span> 3. Open field</h3>
+<p>Reached only via a decisive second-level win or a crit:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Attacker</th>
+<th>Defender</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Skill / Attr</td>
+<td>RB <code>Speed</code></td>
+<td>pursuit <code>Speed</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>margin</code> scales the breakaway length — a true long gain or TD.</li>
+</ul>
+</section>
+</section>
+<section id="sec-yards" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-yards"><span class="header-section-number">4</span> Margin → yards (first pass)</h2>
+<p>A single transfer curve turns a check <code>margin</code> into yardage; the chain sums the contributions.</p>
+<pre><code>yardsAtLine ≈ clamp( round(2 + margin · 0.8), −3, 12 )
+secondLevel ≈ clamp( round(margin · 1.0),      0, 20 )   (on success)
+openField   ≈ clamp( round(8 + margin · 2.5),  0, 80 )   (breakaway only)</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Push margin</th>
+<th>Result at the line</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>≤ −5 (or blunder)</td>
+<td>TFL, −2 to −3</td>
+</tr>
+<tr class="even">
+<td>−4 … 0</td>
+<td>stuffed, 0–2</td>
+</tr>
+<tr class="odd">
+<td>1 … 4</td>
+<td>gain, 3–5</td>
+</tr>
+<tr class="even">
+<td>5 … 8</td>
+<td>good push, 6–10</td>
+</tr>
+<tr class="odd">
+<td>9+ (or crit)</td>
+<td>lane opens → second level</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p>These constants are the <strong>M9 tuning surface</strong>. M1 commits to the <em>shape</em> (piecewise, margin-scaled, clamped), not the exact numbers.</p>
+</blockquote>
+</section>
+<section id="sec-example" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-example"><span class="header-section-number">5</span> Worked example</h2>
+<p>An inside run, traced end to end:</p>
+<pre><code>PUSH
+  Playside Guard : RunBlock 14, Strength 15
+                   eff = 0.65·14 + 0.35·15 = 14.35 → mod +2
+  Interior DL    : BlockShed 12, Strength 13
+                   eff = 0.65·12 + 0.35·13 = 12.35 → mod +1   → DC = 11
+  gap = 2.0 (&lt; 6) → no advantage
+  roll d20 = 12 → total 14 vs DC 11 → SUCCESS, margin 3
+  yardsAtLine = round(2 + 3·0.8) = 4   → hole opens
+
+SECOND LEVEL
+  RB  : Elusiveness 15, Agility 14 → eff 14.65 → mod +2
+  LB  : Tackling 13,  Agility 12  → eff 12.65 → mod +1   → DC = 11
+  roll d20 = 9 → total 11 vs DC 11 → SUCCESS, margin 0
+  secondLevel = round(0·1.0) = 0   → tackle after a short gain
+
+RESULT: +4 yards (no breakaway). A believable inside-run carry.</code></pre>
+<p>The point of the trace: <strong>every yard is explainable</strong> by the checks that produced it.</p>
+</section>
+<section id="sec-generator" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-generator"><span class="header-section-number">6</span> PlayerGenerator (basic)</h2>
+<p>Rosters are generated, deterministically, from the seeded RNG (same seed + team ⇒ same players):</p>
+<ul>
+<li><strong>Each attribute &amp; skill</strong> ~ <code>Normal(μ_position, σ ≈ 2–3)</code>, clamped 1–20. <strong>μ shifts with team prestige</strong> (a stronger program draws from higher means).</li>
+<li><strong>Axes stay independent</strong>: skills are only <em>loosely</em> correlated to their supporting attribute (enough to feel coherent, not derived).</li>
+<li><strong>Roster</strong>: generate enough to field the play — OL, interior DL, LBs, RB (a starters-plus set is fine for M1; full depth comes with M3).</li>
+<li><strong>Identity (stubbed)</strong>: name from a pool, weighted class year, position-conventional jersey number.</li>
+</ul>
+<p>Prestige-weighting and distribution shapes are first-pass; believable talent spreads are an <strong>M9</strong> tuning target. The generator is also the seam recruiting replaces later — see <a href="./architecture.html#sec-player-gen">player generation</a>.</p>
+</section>
+<section id="sec-m1-locks" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-m1-locks"><span class="header-section-number">7</span> What this locks for M1</h2>
+<ul>
+<li>Ratings: <strong>1–20</strong>, two <strong>independent</strong> axes (attributes + skills).</li>
+<li>Check: <code>d20 + attackerMod</code> vs <code>DC = 10 + defenderMod</code>; crit/blunder on 20/1; <code>margin</code> scales magnitude.</li>
+<li>Modifier: <code>floor((0.65·skill + 0.35·attr − 10) / 2)</code>.</li>
+<li>Big rating gaps → advantage/disadvantage (<code>ADV_GAP = 6</code>).</li>
+<li>Inside run = push → second level → open field, with the margin→yards curves above.</li>
+<li>Generator: seeded, per-position Normal, prestige-shifted, independent axes.</li>
+</ul>
+<p>Everything numeric here is a <strong>tuning surface for M9</strong>; the <strong>structure</strong> is the M1 contract.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/wfowle-ilabs\.github\.io\/CollegeFootballSimulator\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./architecture.html" class="pagination-link" aria-label="Architecture">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Architecture</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./goals.html" class="pagination-link" aria-label="v1 Goals &amp; Milestones">
+        <span class="nav-page-text">v1 Goals &amp; Milestones</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>College Football Simulator — design docs · built with Quarto</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
