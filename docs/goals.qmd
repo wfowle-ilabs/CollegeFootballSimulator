@@ -9,9 +9,9 @@ Companion to the [Architecture](architecture.qmd). Living document.
 
 ## Vision {#sec-vision}
 
-A single-player college football **season simulator** where the player picks an FBS team, sets their gameplan and depth chart, and simulates a full season — regular season, conference championships, and the complete CFP — to a national champion. Outcomes are driven by a **Baldur's Gate III-style character/attribute system** resolved with **d20-vs-DC** dice. No traditional overall ratings.
+A single-player college football **season simulator** where the player picks an FBS team, sets their gameplan and depth chart, and simulates a full season — regular season, conference championships, and the complete CFP — to a national champion, then rolls forward through a lightweight offseason into the next season, **year over year**. Outcomes are driven by a **Baldur's Gate III-style character/attribute system** resolved with **d20-vs-DC** dice. No traditional overall ratings.
 
-> The v1 north star: **"Start a save, become a team in a conference, and live through one believable, fully-simulated season."**
+> The v1 north star: **"Start a save, take a program, and run it season after season — believable, fully-simulated, year over year."**
 
 ## v1 Definition of Done {#sec-dod}
 
@@ -25,13 +25,14 @@ v1 ships when a user can, end-to-end:
 6. **Progress through the season:** standings, rankings, and stats update each week.
 7. **Read the Media site:** open the Media menu for weekly recaps, a Featured tab, and lookup of any team's coverage (deterministic templated narratives in v1).
 8. **Reach the postseason:** conference championship games → full CFP bracket → bowls → **national champion** crowned.
-9. **Save & resume** at any point with deterministic continuation.
+9. **Roll into the next season:** a lightweight offseason archives the year, advances class years, graduates seniors, and refills rosters with **generated walk-ons** — then a new season begins. Repeatable indefinitely.
+10. **Save & resume** at any point with deterministic continuation.
 
-If all eight work for **any** FBS team in **any** conference, v1 is done.
+If all of these work for **any** FBS team in **any** conference, across **multiple seasons**, v1 is done.
 
 ## Explicit Non-Goals for v1 {#sec-nongoals}
 
-(See the [scope table](architecture.qmd#sec-scope) for the full breakdown.) In short, v1 does **not** include: recruiting, transfer portal, coaching carousel, multi-season/offseason progression, sub-FBS levels, live play-calling, 3D/2D field rendering, or any online/multiplayer features. These are deliberately deferred and the architecture leaves [hooks for them](architecture.qmd#sec-forward-compat).
+(See the [scope table](architecture.qmd#sec-scope) for the full breakdown.) v1 **does** run multiple seasons, but the offseason replenishes rosters with **generated walk-ons** ([player generation](architecture.qmd#sec-player-gen)) rather than real recruiting. v1 does **not** include: real recruiting, transfer portal, coaching carousel, deep player progression, sub-FBS levels, live play-calling, 3D/2D field rendering, or any online/multiplayer features. These are deliberately deferred and the architecture leaves [hooks for them](architecture.qmd#sec-forward-compat).
 
 ## Milestones (build order) {#sec-milestones}
 
@@ -46,8 +47,9 @@ Each milestone is independently demonstrable and builds on the last.
 ### M1 — Data Model & a Single Play
 
 - Core `Resource` model: `Player`, `Team`, `Coach` with the starting attribute set.
+- `PlayerGenerator` (basic): build a position-appropriate roster from the seeded RNG.
 - `PlayResolver` for one play type (e.g. inside run) composed from `CheckResolver`.
-- *Demo:* simulate one play between two hand-built teams; inspect the check trace.
+- *Demo:* generate two teams, simulate one play between them; inspect the check trace.
 
 ### M2 — Full Game Engine
 
@@ -59,7 +61,7 @@ Each milestone is independently demonstrable and builds on the last.
 
 ### M3 — League, Schedule & Season
 
-- `League` populated with all FBS teams/conferences; `ScheduleBuilder`.
+- `League` populated with all FBS teams/conferences; `PlayerGenerator` scaled to fill all ~130 rosters (prestige-weighted); `ScheduleBuilder`.
 - `SeasonSimulator` (week loop), `StandingsService`, `RankingService`, tiebreaks.
 - *Demo:* sim an entire regular season; standings & rankings look sane.
 
@@ -68,17 +70,23 @@ Each milestone is independently demonstrable and builds on the last.
 - `ConferenceChampionships` → `CfpBracketBuilder` (current 12-team format) → bowls → champion.
 - *Demo:* sim regular season straight through to a crowned national champion.
 
-### M5 — Save / Load
+### M5 — Save / Load & Storage
 
-- `SaveGame` resource graph, `ResourceSaver`/`ResourceLoader`, RNG-state persistence, schema versioning.
-- *Demo:* save mid-season, quit, reload, continue deterministically.
+- `SaveManager` + `ISaveModule`: thin **spine** (registry, RNG state, manifest) + per-module **sidecars** (current / season / media), by-ID references, atomic writes, schema versioning.
+- *Demo:* save mid-season, quit, reload, continue deterministically; confirm sidecars load independently.
 
-### M6 — UI & Flow (the playable shell)
+### M6 — Offseason & Multi-Season
+
+- `OffseasonStage`: archive completed season → **historical-state** sidecar; advance class years; graduate/depart seniors; `PlayerGenerator` walk-on replenishment; build the next season.
+- Multi-season loop wired through `SeasonSimulator`; historical records accumulate.
+- *Demo:* finish a season, run the offseason, play a second season; confirm history persists and rosters are refilled.
+
+### M7 — UI & Flow (the playable shell)
 
 - Main menu, new-save flow (conference→team), Season Hub, depth-chart/gameplan screens, game viewer (play log + live box score), postseason bracket view.
 - *Demo:* the full Definition-of-Done experience (@sec-dod), start to finish.
 
-### M7 — Media & Narratives
+### M8 — Media & Narratives
 
 - `MediaSubsystem` subscribes to game/week events; builds a `NarrativeContext` per story; tiered coverage (featured/ranked/upset/user = full; rest = templated recap).
 - `TemplateNarrativeGenerator` (deterministic baseline) → `NewsArticle`s written to the **sidecar media cache** on a background thread between weeks.
@@ -86,13 +94,13 @@ Each milestone is independently demonstrable and builds on the last.
 - Pluggable hook left ready for `LlmNarrativeGenerator` (LLamaSharp / GGUF) as a later drop-in.
 - *Demo:* advance a week, open the Media site, read auto-generated recaps and the Featured page; look up any team.
 
-### M8 — Balance & Polish
+### M9 — Balance & Polish
 
 - Tune modifier/DC/margin curves against believable stat lines (scoring, yards, completion %, etc.).
-- Data-fill realistic starting rosters/attributes for all FBS teams.
-- *Demo:* a season whose aggregate stats pass a "does this look like real CFB?" sniff test.
+- Tune `PlayerGenerator` distributions so rosters (and walk-ons) look like real CFB talent spreads.
+- *Demo:* a multi-season run whose aggregate stats pass a "does this look like real CFB?" sniff test.
 
-> M0–M4 are engine; M5–M6 make it a game; M7 adds the media layer; M8 makes it *feel* right. M1–M4 can largely proceed headless with tests before the UI exists.
+> M0–M4 are engine; M5–M6 add persistence and the season-over-season loop; M7 makes it playable; M8 adds the media layer; M9 makes it *feel* right. M1–M6 can largely proceed headless with tests before the UI exists.
 
 ## Success Criteria (qualitative) {#sec-success}
 
@@ -100,11 +108,11 @@ Each milestone is independently demonstrable and builds on the last.
 - **Legible:** any outcome can be traced to the checks that produced it.
 - **Deterministic:** same save + seed reproduces the same season exactly.
 - **Performant:** simulating a full week (and a full season) is near-instant from the user's perspective.
-- **Extensible:** adding FCS/D-II/JUCO later means adding *data*, and recruiting/portal means filling the *offseason hook* — not rewriting the engine.
+- **Extensible:** adding FCS/D-II/JUCO later means adding *data*; real recruiting replaces walk-on replenishment in the existing offseason; new history/stat detail becomes a new sidecar — not an engine rewrite.
 
 ## Beyond v1 (roadmap sketch) {#sec-roadmap}
 
-- **v2 — Offseason & dynasty:** multi-season play, player progression/aging, recruiting.
+- **v2 — Recruiting & development:** replace walk-on replenishment with a real recruiting cycle; richer player progression/aging in the (already-present) offseason.
 - **v3 — Movement:** transfer portal, coaching carousel, contracts.
 - **v4 — Expansion downward:** FCS, D-II, D-III, NAIA, JUCO/community colleges as additional leagues/levels.
 - **Media v1.x — on-device LLM writer:** swap the templated generator for a local ~7B/GGUF (LLamaSharp) writer behind `INarrativeGenerator` — richer, more varied articles with no 3rd-party API.

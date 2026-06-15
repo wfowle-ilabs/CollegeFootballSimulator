@@ -35,16 +35,19 @@ This boundary is the most important thing in this document. Everything in "Out" 
 | **Game speed (watch vs. quick sim)** | Two presentation modes over the *same* engine: **watch** (play-by-play log + live box score) and **quick sim** (instant final score + box score, play log discarded). The user may quick-sim any game, including their own. **Non-player fixtures default to quick sim** (a whole week's other games resolve instantly). |
 | **World hierarchy** | The full institutional pyramid (Division → Conference → University → Athletics Dept → Team) exists as data, even where v1 only puts behavior on the Team — see @sec-world. |
 | **Media & narratives** | An in-game **ESPN-style site** (Media menu): weekly recaps, season storylines, a **Featured** tab, and lookup for *any* team. Built on an event-driven pipeline; v1 ships **deterministic, templated** articles with a *pluggable* local-LLM writer that drops in behind the same interface — see @sec-media. |
-| **Save/Load** | Persist a full save (league state mid-season) and resume. |
+| **Multiple seasons** | v1 simulates **season after season** — finish a year, run a lightweight offseason, roll into the next, indefinitely. |
+| **Offseason (walk-on placeholder)** | Between seasons: archive the year, advance class years, graduate/depart players, and **fill open slots with generated walk-ons** — the v1 stand-in for recruiting. |
+| **Player generation** | A deterministic, prestige-weighted **player generator** populates initial rosters at new-save and the walk-ons each offseason — see @sec-player-gen. |
+| **Save/Load & modular storage** | Persist and resume at any time. State is split into per-module **sidecars** (current / season / historical / media + a stats index) referenced **by ID** from a thin main-save spine — see @sec-storage. |
 
 ### ❌ Out of scope (v1 — deferred to later versions)
 
 | Area | Why deferred |
 |---|---|
-| **Recruiting** | Large standalone system (prospects, offers, visits, commitments). v2. |
-| **Transfer portal** | Depends on offseason loop & player valuation. Post-v1. |
+| **Real recruiting** | v1 runs multiple seasons but replenishes rosters with **generated walk-ons** (@sec-player-gen), not a recruiting cycle. Prospects, offers, visits, commitments are v2. |
+| **Transfer portal** | Depends on player valuation & recruiting. Post-v1. |
 | **Coaching carousel** | Hiring/firing/poaching, contracts. Post-v1. |
-| **Offseason / multi-season progression** | v1 is a single in-season experience start→champion. Player development *exists* as attributes but the offseason loop that ages/develops rosters is v2. |
+| **Deep player progression** | v1's offseason advances class years and replaces departures with walk-ons; rich attribute development (coach-driven growth, redshirts, etc.) is v2. |
 | **Sub-FBS levels** (FCS, D-II, D-III, NAIA, JUCO/community college) | Architecture must *allow* it (see @sec-forward-compat), but v1 ships FBS only. |
 | **Live play-calling / coach-mode input during games** | v1 is sim-and-watch. The engine is built so play-calling *could* be injected later, but the user does not call plays in v1. |
 | **3D/2D field visualization** | v1 presents games as text/log + evolving box score. No animated field. |
@@ -154,6 +157,11 @@ SeasonSimulator
                                └─ CheckResolver  ← the d20-vs-DC primitive
   └─ after regular season: ConferenceChampionships → CFPBracket → bowls → Champion
   └─ after each week: update stats, standings, rankings, injuries, fatigue recovery
+  └─ after the season: OffseasonStage
+        ├─ archive completed season → historical state
+        ├─ advance class years · graduate & depart seniors
+        ├─ PlayerGenerator → fill open slots with walk-ons (v1 recruiting placeholder)
+        └─ build next Season → loop   (v1 runs season after season)
 ```
 
 Key idea: **PlayResolver composes many CheckResolver calls.** A single pass play might resolve: protection (OL vs DL checks) → QB decision (Awareness check) → throw (Accuracy vs DC from distance/coverage) → catch (Catching vs DC from coverage/contact) → YAC (Agility vs Tackling). Each is one d20 check; the play outcome is their composition.
@@ -215,7 +223,7 @@ No overall rating. A `Player` carries **core attributes** (broad, slow-changing,
 
 ### Core attributes (every player has these)
 
-Working set — to be finalized in a dedicated attributes reference:
+The working set (numbers, scale, and the blend math live in [Mechanics](mechanics.qmd)):
 
 - **Strength** — power blocking, breaking/making tackles, press.
 - **Agility** — change of direction, route breaks, shedding.
@@ -247,14 +255,24 @@ Coaches are character sheets too — no "overall." Attributes such as: **Offensi
 
 We store *attributes*. We *derive* any "rating-like" number on demand (e.g. a scouting view) from attributes through a position-weighted function — never the reverse. This keeps the BG3 ethos intact and means a "rating" is just one lens on the sheet.
 
+### Player generation (initial rosters & walk-ons) {#sec-player-gen}
+
+Rosters aren't hand-authored — a deterministic **`PlayerGenerator`** builds them, drawing on the seeded RNG (@sec-resolution) so a given save reproduces the same players. It serves two jobs:
+
+1. **Initial league fill** at new-save: ~130 FBS teams' worth of players with position-appropriate attribute/skill sheets, class years, names, and physicals.
+2. **Walk-on replenishment** each offseason: the v1 stand-in for recruiting — open scholarship/depth slots are filled with generated **walk-ons** so rosters stay whole season to season.
+
+Generation is **prestige-weighted**: higher-prestige programs draw from stronger distributions, a rough proxy for recruiting pull until real recruiting arrives. The generator is also the seam recruiting plugs into later — a `RecruitingService` replaces the *walk-on* step (job 2) without touching initial generation (job 1, which still seeds new leagues and, eventually, lower divisions).
+
 ## Data Model — Core Classes {#sec-data-model}
 
 In Godot+C#, the persistent data model is built from **custom `Resource` types** (`[GlobalClass] public partial class X : Resource`). Resources serialize cleanly via `ResourceSaver`/`ResourceLoader`, show in the editor inspector, and are the idiomatic Godot way to hold game data. Pure-logic services (simulators) are **plain C# classes**, not nodes — they take data in and return results, keeping them unit-testable without the scene tree.
 
 ```
 Resource (data — serialized)
-├─ Player              : attributes, skills, position, class/year, depth slot,
-│                         fatigue, injury status, season + career stat lines
+├─ Player              : attributes, skills, position, class/year, depth slot, fatigue,
+│                         injury status; current-season stats live in the season sidecar,
+│                         career stat lines archive to the historical sidecar (by player ID)
 ├─ Coach               : role (HC/OC/DC), attributes, tendencies
 ├─ StaffMember         : trainers/specialists as attribute bundles (lightweight in v1)
 ├─ Team                : identity (name, abbr, colors, venue, prestige),
@@ -269,7 +287,9 @@ Resource (data — serialized)
 ├─ Schedule            : weeks → list of Matchup (home, away, site, week, type)
 ├─ GameResult          : final score, box score, play log (empty when quick-simmed), key events
 ├─ Season              : year, current week, Schedule, standings, rankings, postseason state
-└─ SaveGame            : League + Season + user team id + RNG seed/state + settings
+└─ SaveGame (spine)    : entity registry (ID→sidecar) · user team id · current-season
+                          pointer · RNG seed/state · schema version · sidecar manifest
+                          (bulk data lives in sidecars it references by ID — see @sec-storage)
 
 Plain C# (logic — not serialized)
 ├─ SeasonSimulator / WeekSimulator / GameSimulator / DriveSimulator / PlaySimulator
@@ -279,6 +299,9 @@ Plain C# (logic — not serialized)
 ├─ RankingService, StandingsService, TiebreakService
 ├─ CfpBracketBuilder, ScheduleBuilder
 ├─ StatAggregator
+├─ PlayerGenerator             ← deterministic roster & walk-on generation (@sec-player-gen)
+├─ OffseasonStage              ← archive → age roster → walk-on replenish → next season
+├─ SaveManager + ISaveModule   ← spine + per-module sidecar load/save (@sec-storage)
 ├─ EventBus + typed domain events (GameConcluded, WeekAdvanced, UpsetOccurred, …)
 └─ MediaSubsystem + INarrativeGenerator (TemplateNarrativeGenerator | LlmNarrativeGenerator)
 ```
@@ -287,27 +310,113 @@ Plain C# (logic — not serialized)
 
 > **Media types** (see @sec-media): `NewsArticle : Resource` (headline, body, type, week, team refs, timestamp) lives in the per-save **sidecar media cache**, *not* the core `SaveGame` graph. The `EventBus`, domain events, `MediaSubsystem`, and `INarrativeGenerator` (`TemplateNarrativeGenerator` / `LlmNarrativeGenerator`) are plain C#.
 
-## Save System {#sec-save}
+## Storage & Save Architecture {#sec-storage}
 
-- **Primary approach:** the entire game state is a `SaveGame : Resource` graph. Save = `ResourceSaver.Save(saveGame, "user://saves/slot1.tres")` (or `.res` binary for size/speed); load = `ResourceLoader.Load`. Godot 4.6's resource system is built exactly for "custom resource types that store game data."
-- **RNG state is part of the save** so a resumed save continues deterministically.
-- **Versioning:** `SaveGame` carries a `schemaVersion` int so we can migrate old saves as the model evolves.
-- We are **not** using the node-group `save()`/JSON-line pattern from the Godot docs — that suits scene-tree-resident state; our model is data Resources, which `ResourceSaver` handles directly and more robustly.
+Over a long, multi-season run the interesting data — detailed stats, player career logs, season history — only grows. To keep the hot path small and let that complexity expand gracefully, a save is **not one monolithic file**. It's a thin **spine** plus a set of per-module **sidecars**, generalizing the media-cache pattern.
+
+### The spine (main save file)
+
+Small, always loaded first. Holds only what's needed to bootstrap and to resolve everything else:
+
+- **Entity registry** — `ID → name → which sidecar` for every entity. The one piece of glue that lets sidecars reference each other *without knowing about each other's files*.
+- **Pointers & identity** — user team, current-season pointer, settings.
+- **RNG seed + state** — so a resumed save continues deterministically (@sec-resolution).
+- **Schema version + sidecar manifest** — which files belong to this save, and at what version.
+
+The original plan was `ResourceSaver`/`ResourceLoader` (`.tres`/`.res`).
+
+> **As built (M5):** to keep `CfbSim.Core` engine-free and headlessly testable, persistence is implemented as **portable JSON** (`System.Text.Json`) inside the core — one file per sidecar (`spine.json`, `league.json`, `season.json`, `history.json`, `archive.json`, `media.json`), written atomically (temp + rename) and version-stamped via the spine. The Godot side just hands the core a globalized `user://saves/<slot>` path. Same spine-plus-sidecars shape, just a different (Godot-independent) serializer. Box scores are an exception — kept in a per-session memory cache, not yet persisted.
+
+### Module sidecars (v1 partition)
+
+| Sidecar | Holds | Loaded when |
+|---|---|---|
+| **current-state** | The world as it is now: teams, rosters, players' current attributes, staff, depth charts, schemes, prestige. | At load — it's the live league. |
+| **season-state** | The in-flight season: schedule, results, standings, rankings, week pointer, postseason bracket, current-season stats. | While playing a season. |
+| **historical-state** | Completed seasons: final standings, champions, year-by-year team records, archived player **career** stat lines. | When browsing history / records. |
+| **media** | `NewsArticle`s, keyed by week + team (@sec-media). | When the Media menu opens. |
+| **stats-index** | Cross-cutting rollups: league leaders, all-time records. | For leaderboards; updated incrementally. |
+
+> **Don't over-shard.** This five-way split is the *whole* v1 partition — not a sidecar per entity. Granularity is a knob we turn later (see *Growing complexity*, below).
+
+### The one rule that makes it work: reference by ID, never by pointer
+
+The trap isn't "this data references other data" — almost everything does. The trap is **two files that must be loaded together**. We avoid it with a single discipline:
+
+- **Cross-module links are stored as IDs** (`StringName`/`int`), never as live `Resource` references.
+- **IDs are resolved through the spine's registry**, which says which sidecar holds the target and loads it on demand. A sidecar references *IDs*, not *other sidecars* — they never point at each other directly, and none needs a sibling eagerly loaded to deserialize.
+
+> **Godot specifics:** if a `Resource` `@export`s another `Resource`, loading the parent eagerly pulls the child — exactly the coupling we don't want across modules. So cross-module fields are plain ID values, resolved with `ResourceLoader.Load` on demand. *Within* a module, real sub-resource references are fine.
+
+### The cross-cutting exception
+
+Some data is *owned* by one module but *queried across all* — national stat leaders, all-time records. Rebuilding those by loading every team's sidecar would defeat the purpose, so they get a dedicated **stats-index**, maintained **incrementally** as domain events fire (@sec-events). It's the one deliberate central rollup.
+
+### Growing complexity over time
+
+When a module's dataset becomes genuinely heavy — say, full play-by-play career logs per player — it's promoted to **its own sidecar**, referenced by ID like everything else. No other module changes; the registry just learns a new mapping. That's the whole point: we can deepen stat-keeping and history *without* a migration that touches the rest of the game.
+
+### Integrity
+
+- **Atomic writes:** each sidecar is written to a temp file and renamed into place, so a crash mid-save can't leave a half-written file.
+- **Version-stamping:** every sidecar carries the spine's save/schema version; a mismatch on load is detectable (and migratable).
+- **One abstraction, paid once:** every module implements the same `ISaveModule` (`Save` / `Load` / `version`), so the machinery lives in one `SaveManager` and each module stays trivial — keeping this from becoming "significant complexity."
+
+```{mermaid}
+flowchart TB
+  subgraph SPINE["Main save · the spine (small, always loaded)"]
+    REG["Entity registry<br/>ID → name → sidecar"]
+    META["user team · current-season pointer<br/>RNG state · schema version · manifest"]
+  end
+
+  CUR["current-state sidecar<br/>teams · rosters · staff · depth charts"]
+  SEA["season-state sidecar<br/>schedule · results · standings · bracket"]
+  HIS["historical-state sidecar<br/>past seasons · champions · career stats"]
+  MED["media sidecar<br/>NewsArticles"]
+  IDX["stats-index sidecar<br/>league leaders · records"]
+
+  SPINE ==>|loads on demand| CUR
+  SPINE ==>|loads on demand| SEA
+  SPINE ==>|loads on demand| HIS
+  SPINE ==>|loads on demand| MED
+  SPINE ==>|loads on demand| IDX
+
+  CUR -.->|IDs resolved via registry| REG
+  SEA -.->|IDs resolved via registry| REG
+  HIS -.->|IDs resolved via registry| REG
+  MED -.->|IDs resolved via registry| REG
+  IDX -.->|IDs resolved via registry| REG
+```
+
+This refines the earlier single-`SaveGame`-graph idea: the `SaveGame` resource is now the **spine**, and the bulk lives in sidecars it references by ID. (We still avoid the node-group `save()`/JSON-line pattern from the Godot docs — that suits scene-tree-resident state; our model is data Resources, which `ResourceSaver` handles directly.)
 
 ## Project Structure & Runtime Composition {#sec-structure}
 
 ```
-/docs              ← Quarto design-doc site (this site: architecture, goals, decisions)
-/data              ← .tres data assets: teams, conferences, schedule templates
-/src
-  /Model           ← Resource subclasses (the data model)
-  /Sim             ← simulators, PlayCaller, resolvers (plain C#)
-  /Services        ← rankings, standings, tiebreaks, CFP, scheduling, stats
-  /Save            ← save/load + migration
-  /UI              ← scenes/scripts: menus, team select, season hub, game viewer
-/tests             ← C# unit tests for Sim/Services (headless)
+CollegeFootballSimGoDot.sln
+CollegeFootballSimGoDot.csproj   ← Godot game project (Godot.NET.Sdk); references the core
 project.godot
+/src
+  /Game            ← Godot-side C# only: Nodes, UI, autoloads, Resource adapters
+  /CfbSim.Core     ← engine-free .NET class library — the simulation:
+     /Rng /Dice /Ratings /Checks /Model /Generation /Sim
+     (later: /Services /Save)
+/tests
+  /CfbSim.Tests    ← xUnit, fully headless (dotnet test)
+/samples
+  /CfbSim.Demo     ← console runner for quick play traces
+/docs              ← this Quarto design-doc site
+/data              ← .tres data assets: teams, conferences, schedule templates
 ```
+
+> **Core/engine split (refinement, in place since M1):** the simulation lives in a
+> **`CfbSim.Core` class library with *zero* Godot dependency**, so it's unit-testable
+> headlessly with `dotnet test` (no scene tree, no engine). The Godot project references
+> it. Consequently the **domain model is plain C# for now**; Godot `Resource` types and
+> serialization (@sec-storage) are introduced at the persistence boundary (**M5**), either
+> by adding the `Resource` base to the model or via thin adapter Resources. Randomness uses
+> our own seeded PCG32 (`IRng`) rather than Godot's RNG, which keeps the core engine-free
+> *and* gives stronger cross-platform reproducibility.
 
 **Autoload singletons (Godot autoloads):**
 
@@ -327,8 +436,9 @@ We don't *build* these in v1, but the architecture must not preclude them:
 - **The same play-by-play engine backs both watch and quick-sim** (quick-sim just discards the play log), so spectator mode for non-player games is later a UI toggle to retain that log, not a new engine.
 - **The event-driven core (@sec-events) is open for new consumers** — achievements, awards watches, social-media buzz, recruiting interest — which *subscribe* to existing events rather than touching the sim.
 - **`INarrativeGenerator` lets the on-device LLM writer replace the templated baseline** (@sec-media) with no changes anywhere else.
-- **Offseason loop slot** — `SeasonSimulator` ends by handing state to a (currently no-op) offseason stage where recruiting/portal/carousel will live.
-- **Player has career history + class/year already**, so progression/aging plugs in at the offseason stage.
+- **The offseason stage is real in v1** (walk-on replenishment) — so recruiting, the transfer portal, and the coaching carousel plug into an *existing* seam, not a new one. A `RecruitingService` later replaces `PlayerGenerator`'s walk-on step behind the same call.
+- **Player already carries class/year + career history**, and the historical sidecar already archives it, so richer progression/aging is added depth, not new plumbing.
+- **New per-module sidecars can be added without touching existing ones** (@sec-storage) — by-ID references resolved through the registry mean a future heavy dataset (e.g. detailed player career logs) just becomes its own sidecar.
 - **Everything resolves through `CheckResolver`**, so balance changes are localized to modifier/DC curves.
 
 ## Open Questions (to resolve before/while building) {#sec-open-questions}
@@ -337,10 +447,11 @@ We don't *build* these in v1, but the architecture must not preclude them:
 2. **Play catalog** — how granular is the playbook? (formations + concepts vs. abstract "run inside / play-action deep" buckets). Affects PlayCaller complexity.
 3. **Clock & game-flow fidelity** — real play-clock/game-clock model, quarter length scaling, hurry-up/2-minute logic.
 4. **Penalties & special teams depth** for v1.
-5. **Data sourcing** — where do real FBS teams/conferences/rosters come from, and how are starting attributes generated for ~130 teams' worth of players?
+5. **Data sourcing & generation** — where real FBS team/conference identity data comes from, and the `PlayerGenerator` distributions (per-position, prestige-weighted) that yield believable initial rosters and walk-ons.
 6. **CFP format specifics** — pin the exact current bracket/seeding/bye rules and conference-champ auto-bids.
 7. **Quick-sim performance** — confirm full-engine quick-sim of a whole week (~65 games) is fast enough, or whether an abstracted fast path is needed.
 8. **Local-LLM specifics** — which ~7B model, quantization/size vs. quality, GGUF licensing for redistribution, and the per-week background-generation time budget.
 9. **Narrative "script" design** — the structured prompt/template per article type, and hallucination guardrails that constrain the model to `NarrativeContext` facts.
+10. **Offseason depth & save growth** — does v1's offseason apply any development/aging or strictly advance years + walk-on replenish? And what's the expected sidecar (esp. historical) growth over many seasons?
 
 These are tracked as the next design passes; none block agreeing on the architecture above.

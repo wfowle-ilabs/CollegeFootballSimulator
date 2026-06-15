@@ -17,20 +17,37 @@ Outcomes aren't formulas with noise bolted on. Every contested play resolves as 
 :::
 :::
 
+::: {.callout-tip}
+## Build status — v1 engine complete & playable
+
+Milestones **M0–M8 are built and tested** (68 headless unit tests): the d20 resolution engine, play-by-play games, the full real FBS league + schedule + protected rivalries, season simulation with standings/poll, the 12-team CFP, save/load, the multi-season offseason (walk-on replenishment), and the event-driven media site. They're fronted by a clickable **Godot UI** — a top-nav shell with breadcrumb drill-down into team / player / conference profiles, filterable rosters, a watchable playoff bracket, and comprehensive box scores. What remains for v1 is **M9 — balance & polish**.
+
+**Code layout:** a .NET solution (`CollegeFootballSimGoDot.sln`) with an **engine-free `CfbSim.Core`** class library (all simulation, unit-tested via `dotnet test`) referenced by the Godot game project (`src/Game/`). The core uses portable JSON saves and its own seeded PRNG, so it stays testable without the engine. Try it headless — `dotnet run --project samples/CfbSim.Demo -- season` (or `-- multi 6`, `-- media`) — or open the project in the Godot editor and press Play.
+:::
+
 ## Start here
 
 ::: {.grid}
 
-::: {.g-col-12 .g-col-md-4}
+::: {.g-col-12 .g-col-md-6}
 ::: {.doc-card}
 [**🏛️ Architecture**](architecture.qmd){.doc-card-title}
 
 How the world is modeled and how a game is simulated — the d20/DC engine, the attribute
-system, the institutional hierarchy, the class/data model, and the save system.
+system, the institutional hierarchy, the class/data model, and the storage architecture.
 :::
 :::
 
-::: {.g-col-12 .g-col-md-4}
+::: {.g-col-12 .g-col-md-6}
+::: {.doc-card}
+[**🎲 Mechanics**](mechanics.qmd){.doc-card-title}
+
+The concrete numbers: rating scale, the skill/attribute blend, DC derivation, and the
+inside-run check chain. The build spec for Milestone 1.
+:::
+:::
+
+::: {.g-col-12 .g-col-md-6}
 ::: {.doc-card}
 [**🎯 v1 Goals**](goals.qmd){.doc-card-title}
 
@@ -39,7 +56,7 @@ milestone-by-milestone build order from engine to playable shell.
 :::
 :::
 
-::: {.g-col-12 .g-col-md-4}
+::: {.g-col-12 .g-col-md-6}
 ::: {.doc-card}
 [**📌 Decisions Log**](decisions.qmd){.doc-card-title}
 
@@ -59,10 +76,10 @@ simulation depth, dice system, and v1 scope.
 | **Game fidelity** | Play-by-play (every down), with a **quick-sim** fast path |
 | **Resolution** | d20 + attribute modifier vs. Difficulty Class (crits on 20, blunders on 1) |
 | **Ratings** | Attribute & skill sheets (BG3-style) — no "overall" |
-| **v1 scope** | In-season only: start a save → pick a team → sim the season → crown a champion |
+| **v1 scope** | Multiple seasons: pick a team → sim the season → crown a champion → offseason → repeat (recruiting placeholdered with generated walk-ons) |
 | **User control** | Sim & watch (set scheme + depth chart, watch the sim resolve) |
 | **Media** | In-game ESPN-style site: weekly recaps, Featured tab, team lookup — event-driven, templated in v1 (pluggable on-device LLM later) |
-| **Architecture** | Event-driven: the sim emits domain events; UI, stats, and media subscribe |
+| **Architecture** | Event-driven core; save state split into per-module **sidecars** (current/season/historical/media) referenced by ID from a thin spine |
 
 > These docs are **living documents**. They capture the plan we build against and evolve as the
 > design firms up. See the [Decisions Log](decisions.qmd) for what's locked vs. still open.

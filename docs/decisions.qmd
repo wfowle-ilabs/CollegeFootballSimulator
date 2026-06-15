@@ -16,7 +16,9 @@ Each entry is something we've committed to (or explicitly deferred), so we don't
 | **Resolution system** | **d20 + attribute modifier vs. Difficulty Class** | BG3-style. Nat 20 = crit, nat 1 = blunder. Uniform mechanic across all events. |
 | **Ratings** | **Attribute & skill sheets — no "overall"** | Results emerge from the math; "ratings" are just a derived lens. |
 | **v1 league scope** | **FBS (FBS-IAA) only** | All conferences/teams at one tier; lower levels are additive data later. |
-| **v1 lifecycle scope** | **In-season only** | Start a save → pick a team → sim a full season + full CFP → champion. |
+| **v1 lifecycle scope** | **Multiple seasons** (offseason = walk-on placeholder) | Sim a season + full CFP → champion → lightweight offseason → next season, indefinitely. |
+| **Player generation** | Deterministic, **prestige-weighted** `PlayerGenerator` | Builds initial rosters and offseason walk-ons; the seam recruiting plugs into later. |
+| **Offseason (v1)** | Archive → age roster → graduate → **walk-on replenish** | The v1 stand-in for recruiting; keeps rosters whole across seasons. |
 | **User control** | **Sim & watch** | Set scheme + depth chart pre-game; no live play-calling in v1. |
 | **Game speed** | **Watch vs. quick-sim** over one engine | Non-player fixtures default to quick-sim; quick-sim discards the play log. |
 | **Determinism** | **Single seeded RNG**, saved with the game | Same save + seed ⇒ identical season; enables replay/debugging. |
@@ -28,13 +30,16 @@ Each entry is something we've committed to (or explicitly deferred), so we don't
 | **Article coverage** | **Tiered** (featured/ranked/upset/user = full; rest templated) | Quality-per-compute at ~65 games/week. |
 | **Article storage** | **Sidecar media cache** per save | Persists & re-readable; keeps the core save lean. |
 | **Narrative determinism** | LLM/narratives strictly **downstream**, never feed the sim | Preserves "same seed ⇒ same season." |
+| **Storage model** | Thin **spine** + per-module **sidecars** (current/season/historical/media/stats-index) | Keeps long multi-season runs lean; complexity grows by adding sidecars. |
+| **Cross-module references** | **By ID**, resolved via the spine registry — never object pointers | Sidecars never point at each other or co-load; avoids coupling. |
+| **Cross-cutting data** | A dedicated **stats-index**, updated incrementally from events | Leaderboards/records without loading every sidecar. |
 
 ## Deferred to later versions {#sec-deferred}
 
 | Area | Target |
 |---|---|
-| Recruiting | v2 |
-| Offseason / multi-season progression | v2 |
+| Real recruiting (v1 uses generated walk-ons) | v2 |
+| Deep player progression / development | v2 |
 | Transfer portal, coaching carousel, contracts | v3 |
 | Sub-FBS levels (FCS, D-II, D-III, NAIA, JUCO) | v4 |
 | Conference economy (TV deals → budgets → NIL/recruiting/facilities) | v2+ |
@@ -50,8 +55,9 @@ Tracked design questions that don't block the architecture but need answers as w
 2. **Play catalog granularity** — real formations/concepts vs. abstract play buckets.
 3. **Clock & game-flow fidelity** — play/game clock, quarter scaling, hurry-up/2-minute logic.
 4. **Penalties & special-teams depth** for v1.
-5. **Data sourcing** — where real FBS team/conference/roster data comes from, and how starting attributes are generated for ~130 teams.
+5. **Data sourcing & generation** — where real FBS team/conference identity data comes from, and the `PlayerGenerator` distributions (per-position, prestige-weighted) for believable rosters and walk-ons.
 6. **CFP format specifics** — exact bracket/seeding/bye rules and conference auto-bids.
 7. **Quick-sim performance** — whether full-engine quick-sim of a whole week is fast enough or needs an abstracted fast path.
 8. **Local-LLM specifics** — which ~7B model, quantization/size vs. quality, GGUF redistribution licensing, and the per-week background-generation time budget.
 9. **Narrative "script" design** — the structured prompt/template per article type and the guardrails that keep a small model constrained to `NarrativeContext` facts.
+10. **Offseason depth & save growth** — whether v1's offseason applies any development/aging or strictly ages + walk-on replenishes, and expected sidecar (esp. historical) growth over many seasons.
