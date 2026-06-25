@@ -1,0 +1,14 @@
+---
+title: "College Football Simulator"
+---
+
+I want to use this document as a comprehensive record of design plans that I have for the aptly named College Football Simulator. Perhaps I will give it a better name in the future, almost certainly I'll have to.
+
+However, for the purposes of this simulation I want to capture all of the major aspects of college football all the way from junior colleges to the top teams and conferences of the FBS. 
+
+Now the game of football has many nuances and I'm going to try to cover them here before I attempt my hand at all in any project. Now in terms of game engine and my options there I'm stuck between GoDot and Unity. Both of these engines support C# as their scripting languange and as such I will be using that here. 
+
+# Development Objectives
+
+Now creating a simulator for College Football requires us to accomplish several key aspects that are essential to the game and the peripheral institutions and workings that make the game behave in the real world as it does. 
+
