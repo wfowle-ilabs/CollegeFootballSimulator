@@ -12,3 +12,180 @@ Now the game of football has many nuances and I'm going to try to cover them her
 
 Now creating a simulator for College Football requires us to accomplish several key aspects that are essential to the game and the peripheral institutions and workings that make the game behave in the real world as it does. 
 
+## Gameplay
+
+For our simulator the player will not control individual players on the field, instead they will control the head coach role for an organization. Therefore, the sim could really be called College Football Head Coach Simulator, but you get the gist. Since the player's perspective will be from that of a head coach, an offensive coordinator, or a defensive coordinator, the gameplay mechanics in which the player holds these roles must be consistent. 
+
+So for a head coach with regards to gameplay some of our main focuses might include:
+
+1. Managing players on a roster 
+2. Determining what scheme your team uses offensively and defensively
+3. Ensuring that each of your players understands that scheme.
+4. Controlling the training regime for different units within your team structure 
+5. Maintaining a relationship with your players, school, provost, and other coaches. 
+6. Taking on new jobs in the form of new Head coach roles, off coordinator roles, def coordinator roles through either leaving a position in one school and joining another school or receiving a promotion.
+7. Play calling in games against opposing teams. 
+8. Play calling in practice with your team's players so you can test schemes, play styles, etc. 
+9. Building your own custom plays out of your scheme and implementing them.
+10. Recruting high school players 
+11. Recruiting transfer portal players 
+12. Dealing with NIL
+13. Dealing with the Media 
+14. Dealing with scouts and generating scout reports on recruits and opposing teams. 
+
+Now these are gameplay areas where I expect the player will be able to build up the accumen to have an impact on his overall program. A player who is good at player development should be able to bring in talent and put them to use immediately. Players who are good at these mechanics should be able to build national powerhouses from nothing. 
+
+But this list above simply represents the knobs in the game where we expect the user to be able to have an impact, there are other systems that will have side-effects based on the impact of the players actions as well as serve as environmental story tellers. 
+
+## World 
+
+Now any game that seeks to be immersive as a simulator should needs to build a complex and comprehensive world that captures the essence of what we're simulating. In the college football world there are multiple large things that come together to create our environment as we know it today:
+
+1. Regulatory Body (The NCAA)
+2. Sports Broadcasting Organizations (like Fox Sports, ESPN, etc.) 
+3. Gambling Agencies (Like DraftKings, Vegas, etc.)
+4. Conferences (Big 10, SEC, Big 12, etc.)
+5. Schools (Texas Tech, Clemson, North Dakota State, etc.)
+6. Media Agencies (ESPN, The Atlantic, etc.)
+7. NIL collectives
+8. Provost, Investors, Alumni
+9. The general population
+10. Financials (Like how much budget a school has, and how much it dedicates to the football program).
+
+There are likely also other systems that will need to be a part of the interplay here but for the most part these systems form the major backbone of the world the player will be dropped into. 
+
+We will want to be able to simulate these to a degree as to have a meaningul impact on the players experience of the game. These things should be adaptive to how the player chooses to play the game and should respond as such. 
+
+Your team went 0-10, well the Media is probably going to grill you, your school and AD are going to want to have serious conversations, and no one is likely going to want to show up to your games. That's a simple example but you get the idea. The player's performance in gameplay should have an impact on the world around them in a meaningful way. The player should be able to clearly see that impact through the simulation of the above mentioned systems as a feedback mechanism aside from just winning games. 
+
+# Implementation 
+
+## Core Mechanics 
+
+The core mechanics behind any game can be tough to nail down but for this CFB simulator we'll have some key needs to accomplish both the World and Gameplay development objectives. 
+
+## Players
+
+Each player in the game should be represented by an object that has the ability to cover that player's physical abilities, their mental abilities, and their intentions on a current team. Now any player can play any position but each player should have their preferred positions, and a keen coach should be able to spot based on a players physical and mental abilities where they are most likley to have the best impact on a roster. 
+
+### Morale
+A player should have a morale system, this morale system should represent how highly the player thinks of himself, the program, his coach, or an individual game. Therefore a player's morale can be impacted at multiple levels.
+
+**Program Morale**
+A player's program morale refers to how highly he thinks of the team he plays for and the school he is at. Based on a players motiviations, the program morale can be effected by things like his grades, his classes, relationships with other players, students, coaches, staff. A player with a high program morale is happy at the proram he is currently at. A player who is happy with the current program he is at is unlikely to leave that program for those purposes. 
+
+**Coach Morale**
+Since our players play as coaches, the coach the player plays as and the relationship the player has with the user coach is represented by this morale. A player with a high coach morale has a good relationship with his coach, he is likely to follow your directions, encourage other players to do so, and react positively in most conversations. A player with a high coach morale is unlikley to want to play for other coaches. 
+
+**Game Morale**
+Each player on a team will have an individual game morale for each game they play. Now the starting position of that morale can be affected by other morale statues. A player with a low program and/or coach morale will likely start a game with a lower game morale. If the player makes a bad play, or his team concedes a touchdown, a player's game morale will likely reduce. We want to use this system to help show how momentum swings can happen in games. A player with a low game morale is likely to give up on a game and not play their best. 
+
+**Individual Morale**
+A player's individual morale refers to that player's belief in their own ability, this can be affected by the mental ability called to confidence ability. When a player makes a good play in a game, or does well in practice, gets good grades, then that player's individual morale will be good. Players with a high individual morale are more likley to see the best usage of their abilities. Players with a poor individual morale are more likley to see penalties applied to their physical and skill abilities. 
+
+### Abilities
+
+Abilities are physical, mental, or skills that can be represented by a rating. Physical refers to the player's physical ability to perform an action, Skills refer to the abilites of a player to perform a "Football action". Mental abilities represent the players mentality and how his actions he decides to take can be influenced by the world around him.
+
+Abilities can be represented by a numeric value of 0-99. 0 being the lowest possible rating for any attribute, and 99 being the highest possible rating. 
+
+**Physical Abilities**
+
+We should define attributes that make up the physical abilities of a player, these constitute a player's ability to perform a physical task in the sim world and they are multiplied by the player's build properties. 
+
+**Build Properties & Build Profile**
+
+A player's build properties correspond to the player's height, weight, and body type. 
+
+The reason we multiply the attributes by the build property is because we want to show that a player's build has an affect on their physical ability, ergo, a player with a build profile (a build profile being the build properties brought together) of Height of 6'2" and a weight of 190 with a body type of Lean, and let's say we had a physical ability "speed" which defines the players top speed. 
+
+Well we would derive some constant n from the player's physical profile and we would multiply it by the attribute to find that players top speed in the game engine. Each physical ability will likely need some unique formula, or some basic formula to determine a physics based context for what physical actions are possible for a player in the game world. 
+
+For example a 5'9", 185, fat player with 21 speed, and 19 acceleration is certainly slower than a 6'0", 175, lean player who has 21 speed and 19 acceleration. 
+
+**Therefore a player's physical ability is a rating that refers to** his ability to perform a common physical task and can be used as a measure to determine generally how good a player is at performing that physical task.
+
+**A players build profile is a multiplier derived from his physical frame, height, weight, arm span, leg length,** etc. to determine multipliers against his physical attributes. 
+
+**Skill Abilities**
+
+Each player should have some set of skill abilities that represent their ability to perform the specific functions needed on a football field during a football game.
+
+**Mental Abilities**
+
+Each player should have certain mentail abilities represented by ratings that can serve as representations of the players "likehood" to be affected and in what ways by specific aspects of the game.
+
+Let's say a player has a Willpower rating of 54, let's also say that the player's Game morale is 55/100. In the event that his team gives up an interception, and that he's been on the field and is fatigued, his will power rating can serve as a negative multipler when his game morale is said to be in a positive position 60 or greater, or a negative multiplier when his Game morale is in a negative position. 40 or under. 
+
+### Status Ratings
+
+
+
+
+
+### List of Abilities and Their effects.
+
+**Physical Abilities**
+- Speed: The top speed of a player. This value represents the maximum possible speed this player can reach. It is affected by his fatigue status.
+- Acceleration: The players ability to affect his movement vector in a single direction. Each player in the game engine has his movement represented by a vector. Now that vector has a direction and velocity associated with it. A player with high acceleration has a higher total capability to increase or decrease that movement vector's velocity with resepect to a single direction.
+- Agility: Where acceleration represents the ability to change the velocity of movement with respect to one direction, the agility rating shows how quickly and effectiently the player can change the DIRECTION of that movement vector rather than the velocity. 
+- Jumping: The players ability to physically leave the ground, what is the maximum height that they can achieve in their jump. 
+- Strength: A player's maximum ability to resist an opposing movement vector in any instance.
+- Endurance: The player's ability to not be affected by a fatigue status. A fatigue status serves as a negative multipler across all physical abilities. 
+- Reflexes: A player's ability to react to an event at a certain speed. A high reflex rating allows a player to react quickly to an in-game physical event quicker than other players.
+- Coordination: A player's precision to affect their movement vector, and/or hands in reaction to an event. 
+- Balance: A player's ability to remain upgright once their physical position is affected.
+
+**Skill Abilities**
+
+**Throwing Attributes**
+- Throw Power: The ability to generate a velocity vector on the ball when held in a throwing position.
+- Throw Precision: The ability of a player to place the ball in the ideal catch radius of a player. 
+- Throw IQ: The knowledge of a player's ability to know where to attempt to place a throw in order to have the closest delivery to the idea catch radius of a player.
+- Throw Release: The ability of a player to quickly release a full potential throw. A player with a high throw release rating can generate all of their possible power, accuracy and precision quicker than a player with a lower throw release rating.
+
+**Blocking Attributes**
+- Chop-Block: The ability of a player to correctly time and perform a chop block blocking technique. Only legally performed within 3 yards of the line of scrimmage, A lineman will block down lown with his shoulders and arms attempting to take the defender's legs out from underneath him. 
+- Cut-off Block: Generally used on running plays, this is the ability of a player to block a player who is running freely in the open, also known as an angle block because the blocker will typically hit the opposing player from the side or from an angle. 
+- Drive-block: Usually a 1:1 blocking technique where our blocking player and opposing player are lined up directly over one another.
+- Man-On-Blocking: A blocker's ability to perform blocking in the open field against a player he is lined up against. 
+- Reach-block: A block in which the blocking player must reach for the defender, this typically means the player reaching is not blocking with their physical body but just their arm. 
+- Zone block: The ability of a player to block a specific area or zone. 
+- Blocking IQ: The ability of a player to know what type of block to use in a specific situation.
+
+**Rushing Attributes**
+[I found the rushing styles from this blog here](https://dlineexamples.substack.com/p/pass-rush-moves-handbook) it also kindly includes gifs of each rushing technique!
+
+These are typically edge rushing techniques:
+- Speed-Bull: the ability of a player to perform a Speed bull rush technique, effective against patient blockers who don't "shoot their hands"
+- Ghost-Rush: Effective against blockers that punch high and are aggressive
+- Stutter-Bull: Effective against blockers who are poor against inside moves. 
+- Chop-Spin: Effective against blockers who turn their hips eagerly.
+- Bull-Slip: Effective against blockers who are patient with their hands and won't easily punch.
+
+Interior Rushing Techniques:
+- Chop-Club: Effective against aggressive blockers who have a tedency to turn their hips.
+- Cross-Chop Effective against agressive blockers who punch low with their hands.
+- Couter-Club: Effective against blockers who agressively punch.
+- Pull-Slide: Effective against blockers who are passive and don't shoot their hands. 
+
+- Rushing-IQ: The ability of a player to select the right rushing technique given a blocking event. 
+
+**Ball-Carrier Attributes**
+
+A ball carrier is anyone with the ball in their hands, could be a QB, RB, or a DT who just intercepted the worst pass you've ever seen.
+
+- Ball-Security: The ability of the player to protect the football and hold onto it. 
+- Stiff-Arm: The ability of the player to correctly place their arm on an oncoming tackler, still affected by strength and oncoming attackers force vector. 
+- Hurdle: The ability of a ball-carrier to read and correctly time a jump over a player attempting to tackle them.
+- Field-Vision: The ability of a player to know where other players are at on the field. 
+- 
+
+
+
+
+
+
+
+
+
