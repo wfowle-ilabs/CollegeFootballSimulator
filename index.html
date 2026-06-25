@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>College Football Simulator</title>
+<title>College Football Simulator – docs</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -27,32 +27,28 @@ ul.task-list li input[type="checkbox"] {
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./architecture.html" rel="next">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-9150029ec934d1cf45e0ed904b425734.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-b67f8e63430cbcca6640b68aa6536f97.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-e11ed3a3124fed09e1f211e21a312cdc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-f99ac55a5b33c71d9c7e6b6bb3c0e0ed.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-bba5ebae505b5c03f3f0d8040a416a6b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
+  "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
+  "panel-placement": "start",
+  "type": "textbox",
   "limit": 50,
   "keyboard-shortcut": [
     "f",
@@ -74,235 +70,23 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
-    const toggleBodyColorMode = (bsSheetEl) => {
-      const mode = bsSheetEl.getAttribute("data-mode");
-      const bodyEl = window.document.querySelector("body");
-      if (mode === "dark") {
-        bodyEl.classList.add("quarto-dark");
-        bodyEl.classList.remove("quarto-light");
-      } else {
-        bodyEl.classList.add("quarto-light");
-        bodyEl.classList.remove("quarto-dark");
-      }
-    }
-    const toggleBodyColorPrimary = () => {
-      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
-      if (bsSheetEl) {
-        toggleBodyColorMode(bsSheetEl);
-      }
-    }
-    const setColorSchemeToggle = (alternate) => {
-      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
-      for (let i=0; i < toggles.length; i++) {
-        const toggle = toggles[i];
-        if (toggle) {
-          if (alternate) {
-            toggle.classList.add("alternate");
-          } else {
-            toggle.classList.remove("alternate");
-          }
-        }
-      }
-    };
-    const toggleColorMode = (alternate) => {
-      // Switch the stylesheets
-      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
-      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
-      manageTransitions('#quarto-margin-sidebar .nav-link', false);
-      if (alternate) {
-        // note: dark is layered on light, we don't disable primary!
-        enableStylesheet(alternateStylesheets);
-        for (const sheetNode of alternateStylesheets) {
-          if (sheetNode.id === "quarto-bootstrap") {
-            toggleBodyColorMode(sheetNode);
-          }
-        }
-      } else {
-        disableStylesheet(alternateStylesheets);
-        enableStylesheet(primaryStylesheets)
-        toggleBodyColorPrimary();
-      }
-      manageTransitions('#quarto-margin-sidebar .nav-link', true);
-      // Switch the toggles
-      setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
-      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
-        manageTransitions("body", false);
-        window.scrollTo(0, 1);
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-          manageTransitions("body", true);
-        }, 40);
-      }
-    }
-    const disableStylesheet = (stylesheets) => {
-      for (let i=0; i < stylesheets.length; i++) {
-        const stylesheet = stylesheets[i];
-        stylesheet.rel = 'disabled-stylesheet';
-      }
-    }
-    const enableStylesheet = (stylesheets) => {
-      for (let i=0; i < stylesheets.length; i++) {
-        const stylesheet = stylesheets[i];
-        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
-          stylesheet.rel = 'stylesheet';
-        }
-      }
-    }
-    const manageTransitions = (selector, allowTransitions) => {
-      const els = window.document.querySelectorAll(selector);
-      for (let i=0; i < els.length; i++) {
-        const el = els[i];
-        if (allowTransitions) {
-          el.classList.remove('notransition');
-        } else {
-          el.classList.add('notransition');
-        }
-      }
-    }
-    const isFileUrl = () => {
-      return window.location.protocol === 'file:';
-    }
-    const hasAlternateSentinel = () => {
-      let styleSentinel = getColorSchemeSentinel();
-      if (styleSentinel !== null) {
-        return styleSentinel === "alternate";
-      } else {
-        return false;
-      }
-    }
-    const setStyleSentinel = (alternate) => {
-      const value = alternate ? "alternate" : "default";
-      if (!isFileUrl()) {
-        window.localStorage.setItem("quarto-color-scheme", value);
-      } else {
-        localAlternateSentinel = value;
-      }
-    }
-    const getColorSchemeSentinel = () => {
-      if (!isFileUrl()) {
-        const storageValue = window.localStorage.getItem("quarto-color-scheme");
-        return storageValue != null ? storageValue : localAlternateSentinel;
-      } else {
-        return localAlternateSentinel;
-      }
-    }
-    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
-      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
-      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
-      let newTheme = '';
-      if(authorPrefersDark) {
-        newTheme = isAlternate ? baseTheme : alternateTheme;
-      } else {
-        newTheme = isAlternate ? alternateTheme : baseTheme;
-      }
-      const changeGiscusTheme = () => {
-        // From: https://github.com/giscus/giscus/issues/336
-        const sendMessage = (message) => {
-          const iframe = document.querySelector('iframe.giscus-frame');
-          if (!iframe) return;
-          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
-        }
-        sendMessage({
-          setConfig: {
-            theme: newTheme
-          }
-        });
-      }
-      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
-      if (isGiscussLoaded) {
-        changeGiscusTheme();
-      }
-    };
-    const authorPrefersDark = false;
-    const darkModeDefault = authorPrefersDark;
-      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
-      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
-    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
-    // Dark / light mode switch
-    window.quartoToggleColorScheme = () => {
-      // Read the current dark / light value
-      let toAlternate = !hasAlternateSentinel();
-      toggleColorMode(toAlternate);
-      setStyleSentinel(toAlternate);
-      toggleGiscusIfUsed(toAlternate, darkModeDefault);
-      window.dispatchEvent(new Event('resize'));
-    };
-    // Switch to dark mode if need be
-    if (hasAlternateSentinel()) {
-      toggleColorMode(true);
-    } else {
-      toggleColorMode(false);
-    }
-  </script>
+<body class="nav-sidebar floating quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
-      <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">College Football Simulator</span>
-    </a>
-  </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-  <span class="navbar-toggler-icon"></span>
-</button>
-          <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
-  <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
-<span class="menu-text">Home</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./architecture.html"> 
-<span class="menu-text">Architecture</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./mechanics.html"> 
-<span class="menu-text">Mechanics</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./goals.html"> 
-<span class="menu-text">v1 Goals</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./v1_1.html"> 
-<span class="menu-text">v1.1</span></a>
-  </li>  
-</ul>
-            <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img" aria-label="GitHub">
-</i> 
-<span class="menu-text"></span></a>
-  </li>  
-</ul>
-          </div> <!-- /navcollapse -->
-            <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
-  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
-  <div class="quarto-reader-toggle-btn">
-  <i class="bi"></i>
-  </div>
-</a>
-</div>
-      </div> <!-- /container-fluid -->
-    </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Home</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">
+      docs
+      </li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -312,88 +96,52 @@ ul.task-list li input[type="checkbox"] {
   </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">docs</a> 
+    </div>
+      </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
         <div class="sidebar-search">
         <div id="quarto-search" class="" title="Search"></div>
         </div>
         </div>
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Home</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Design</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Architecture</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./mechanics.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Mechanics — Checks, Ratings &amp; the Inside Run</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./goals.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">v1 Goals &amp; Milestones</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./v1_1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">v1.1 — SimCast &amp; Playstyle Identity</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./decisions.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Decisions Log</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#development-objectives" id="toc-development-objectives" class="nav-link active" data-scroll-target="#development-objectives">Development Objectives</a>
+  <ul class="collapse">
+  <li><a href="#gameplay" id="toc-gameplay" class="nav-link" data-scroll-target="#gameplay">Gameplay</a></li>
+  <li><a href="#world" id="toc-world" class="nav-link" data-scroll-target="#world">World</a></li>
+  </ul></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a>
+  <ul class="collapse">
+  <li><a href="#core-mechanics" id="toc-core-mechanics" class="nav-link" data-scroll-target="#core-mechanics">Core Mechanics</a></li>
+  <li><a href="#players" id="toc-players" class="nav-link" data-scroll-target="#players">Players</a>
+  <ul class="collapse">
+  <li><a href="#morale" id="toc-morale" class="nav-link" data-scroll-target="#morale">Morale</a></li>
+  <li><a href="#abilities" id="toc-abilities" class="nav-link" data-scroll-target="#abilities">Abilities</a></li>
+  <li><a href="#status-ratings" id="toc-status-ratings" class="nav-link" data-scroll-target="#status-ratings">Status Ratings</a></li>
+  <li><a href="#list-of-abilities-and-their-effects." id="toc-list-of-abilities-and-their-effects." class="nav-link" data-scroll-target="#list-of-abilities-and-their-effects.">List of Abilities and Their effects.</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
-
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">College Football Simulator</h1>
-<p class="subtitle lead">Design documentation</p>
 </div>
 
 
@@ -410,124 +158,124 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div class="hero">
-<p>A single-player <strong>college football season simulator</strong> built in <strong>Godot 4.6.3</strong> with <strong>C# / .NET</strong>. You pick an FBS team, set your gameplan and depth chart, and simulate a full season — regular season, conference championships, and the complete CFP — to a national champion.</p>
-<div class="tagline">
-<p>Outcomes aren’t formulas with noise bolted on. Every contested play resolves as a <strong>d20 check against a Difficulty Class</strong>, against players and coaches described by <em>Baldur’s Gate III</em>-style attribute sheets — <strong>no traditional “overall” ratings</strong>.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Build status — v1 engine complete &amp; playable
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Milestones <strong>M0–M8 are built and tested</strong> (68 headless unit tests): the d20 resolution engine, play-by-play games, the full real FBS league + schedule + protected rivalries, season simulation with standings/poll, the 12-team CFP, save/load, the multi-season offseason (walk-on replenishment), and the event-driven media site. They’re fronted by a clickable <strong>Godot UI</strong> — a top-nav shell with breadcrumb drill-down into team / player / conference profiles, filterable rosters, a watchable playoff bracket, and comprehensive box scores. What remains for v1 is <strong>M9 — balance &amp; polish</strong>.</p>
-<p><strong>Code layout:</strong> a .NET solution (<code>CollegeFootballSimGoDot.sln</code>) with an <strong>engine-free <code>CfbSim.Core</code></strong> class library (all simulation, unit-tested via <code>dotnet test</code>) referenced by the Godot game project (<code>src/Game/</code>). The core uses portable JSON saves and its own seeded PRNG, so it stays testable without the engine. Try it headless — <code>dotnet run --project samples/CfbSim.Demo -- season</code> (or <code>-- multi 6</code>, <code>-- media</code>) — or open the project in the Godot editor and press Play.</p>
-</div>
-</div>
-<section id="start-here" class="level2">
-<h2 class="anchored" data-anchor-id="start-here">Start here</h2>
-<div class="grid">
-<div class="g-col-12 g-col-md-6">
-<div class="doc-card">
-<p><a href="./architecture.html" class="doc-card-title"><strong>🏛️ Architecture</strong></a></p>
-<p>How the world is modeled and how a game is simulated — the d20/DC engine, the attribute system, the institutional hierarchy, the class/data model, and the storage architecture.</p>
-</div>
-</div>
-<div class="g-col-12 g-col-md-6">
-<div class="doc-card">
-<p><a href="./mechanics.html" class="doc-card-title"><strong>🎲 Mechanics</strong></a></p>
-<p>The concrete numbers: rating scale, the skill/attribute blend, DC derivation, and the inside-run check chain. The build spec for Milestone 1.</p>
-</div>
-</div>
-<div class="g-col-12 g-col-md-6">
-<div class="doc-card">
-<p><a href="./goals.html" class="doc-card-title"><strong>🎯 v1 Goals</strong></a></p>
-<p>What v1 must do, what it deliberately won’t, the Definition of Done, and the milestone-by-milestone build order from engine to playable shell.</p>
-</div>
-</div>
-<div class="g-col-12 g-col-md-6">
-<div class="doc-card">
-<p><a href="./decisions.html" class="doc-card-title"><strong>📌 Decisions Log</strong></a></p>
-<p>The locked, high-level decisions that anchor everything else — engine, language, simulation depth, dice system, and v1 scope.</p>
-</div>
-</div>
-</div>
+<p>I want to use this document as a comprehensive record of design plans that I have for the aptly named College Football Simulator. Perhaps I will give it a better name in the future, almost certainly I’ll have to.</p>
+<p>However, for the purposes of this simulation I want to capture all of the major aspects of college football all the way from junior colleges to the top teams and conferences of the FBS.</p>
+<p>Now the game of football has many nuances and I’m going to try to cover them here before I attempt my hand at all in any project. Now in terms of game engine and my options there I’m stuck between GoDot and Unity. Both of these engines support C# as their scripting languange and as such I will be using that here.</p>
+<section id="development-objectives" class="level1">
+<h1>Development Objectives</h1>
+<p>Now creating a simulator for College Football requires us to accomplish several key aspects that are essential to the game and the peripheral institutions and workings that make the game behave in the real world as it does.</p>
+<section id="gameplay" class="level2">
+<h2 class="anchored" data-anchor-id="gameplay">Gameplay</h2>
+<p>For our simulator the player will not control individual players on the field, instead they will control the head coach role for an organization. Therefore, the sim could really be called College Football Head Coach Simulator, but you get the gist. Since the player’s perspective will be from that of a head coach, an offensive coordinator, or a defensive coordinator, the gameplay mechanics in which the player holds these roles must be consistent.</p>
+<p>So for a head coach with regards to gameplay some of our main focuses might include:</p>
+<ol type="1">
+<li>Managing players on a roster</li>
+<li>Determining what scheme your team uses offensively and defensively</li>
+<li>Ensuring that each of your players understands that scheme.</li>
+<li>Controlling the training regime for different units within your team structure</li>
+<li>Maintaining a relationship with your players, school, provost, and other coaches.</li>
+<li>Taking on new jobs in the form of new Head coach roles, off coordinator roles, def coordinator roles through either leaving a position in one school and joining another school or receiving a promotion.</li>
+<li>Play calling in games against opposing teams.</li>
+<li>Play calling in practice with your team’s players so you can test schemes, play styles, etc.</li>
+<li>Building your own custom plays out of your scheme and implementing them.</li>
+<li>Recruting high school players</li>
+<li>Recruiting transfer portal players</li>
+<li>Dealing with NIL</li>
+<li>Dealing with the Media</li>
+<li>Dealing with scouts and generating scout reports on recruits and opposing teams.</li>
+</ol>
+<p>Now these are gameplay areas where I expect the player will be able to build up the accumen to have an impact on his overall program. A player who is good at player development should be able to bring in talent and put them to use immediately. Players who are good at these mechanics should be able to build national powerhouses from nothing.</p>
+<p>But this list above simply represents the knobs in the game where we expect the user to be able to have an impact, there are other systems that will have side-effects based on the impact of the players actions as well as serve as environmental story tellers.</p>
 </section>
-<section id="sec-shape" class="level2">
-<h2 class="anchored" data-anchor-id="sec-shape">The shape of v1</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<tbody>
-<tr class="odd">
-<td><strong>Engine / language</strong></td>
-<td>Godot 4.6.3 · C# / .NET</td>
-</tr>
-<tr class="even">
-<td><strong>Simulated</strong></td>
-<td>FBS (FBS-IAA) only — full current scheduling + the complete CFP</td>
-</tr>
-<tr class="odd">
-<td><strong>Game fidelity</strong></td>
-<td>Play-by-play (every down), with a <strong>quick-sim</strong> fast path</td>
-</tr>
-<tr class="even">
-<td><strong>Resolution</strong></td>
-<td>d20 + attribute modifier vs.&nbsp;Difficulty Class (crits on 20, blunders on 1)</td>
-</tr>
-<tr class="odd">
-<td><strong>Ratings</strong></td>
-<td>Attribute &amp; skill sheets (BG3-style) — no “overall”</td>
-</tr>
-<tr class="even">
-<td><strong>v1 scope</strong></td>
-<td>Multiple seasons: pick a team → sim the season → crown a champion → offseason → repeat (recruiting placeholdered with generated walk-ons)</td>
-</tr>
-<tr class="odd">
-<td><strong>User control</strong></td>
-<td>Sim &amp; watch (set scheme + depth chart, watch the sim resolve)</td>
-</tr>
-<tr class="even">
-<td><strong>Media</strong></td>
-<td>In-game ESPN-style site: weekly recaps, Featured tab, team lookup — event-driven, templated in v1 (pluggable on-device LLM later)</td>
-</tr>
-<tr class="odd">
-<td><strong>Architecture</strong></td>
-<td>Event-driven core; save state split into per-module <strong>sidecars</strong> (current/season/historical/media) referenced by ID from a thin spine</td>
-</tr>
-</tbody>
-</table>
-<blockquote class="blockquote">
-<p>These docs are <strong>living documents</strong>. They capture the plan we build against and evolve as the design firms up. See the <a href="./decisions.html">Decisions Log</a> for what’s locked vs.&nbsp;still open.</p>
-</blockquote>
+<section id="world" class="level2">
+<h2 class="anchored" data-anchor-id="world">World</h2>
+<p>Now any game that seeks to be immersive as a simulator should needs to build a complex and comprehensive world that captures the essence of what we’re simulating. In the college football world there are multiple large things that come together to create our environment as we know it today:</p>
+<ol type="1">
+<li>Regulatory Body (The NCAA)</li>
+<li>Sports Broadcasting Organizations (like Fox Sports, ESPN, etc.)</li>
+<li>Gambling Agencies (Like DraftKings, Vegas, etc.)</li>
+<li>Conferences (Big 10, SEC, Big 12, etc.)</li>
+<li>Schools (Texas Tech, Clemson, North Dakota State, etc.)</li>
+<li>Media Agencies (ESPN, The Atlantic, etc.)</li>
+<li>NIL collectives</li>
+<li>Provost, Investors, Alumni</li>
+<li>The general population</li>
+<li>Financials (Like how much budget a school has, and how much it dedicates to the football program).</li>
+</ol>
+<p>There are likely also other systems that will need to be a part of the interplay here but for the most part these systems form the major backbone of the world the player will be dropped into.</p>
+<p>We will want to be able to simulate these to a degree as to have a meaningul impact on the players experience of the game. These things should be adaptive to how the player chooses to play the game and should respond as such.</p>
+<p>Your team went 0-10, well the Media is probably going to grill you, your school and AD are going to want to have serious conversations, and no one is likely going to want to show up to your games. That’s a simple example but you get the idea. The player’s performance in gameplay should have an impact on the world around them in a meaningful way. The player should be able to clearly see that impact through the simulation of the above mentioned systems as a feedback mechanism aside from just winning games.</p>
+</section>
+</section>
+<section id="implementation" class="level1">
+<h1>Implementation</h1>
+<section id="core-mechanics" class="level2">
+<h2 class="anchored" data-anchor-id="core-mechanics">Core Mechanics</h2>
+<p>The core mechanics behind any game can be tough to nail down but for this CFB simulator we’ll have some key needs to accomplish both the World and Gameplay development objectives.</p>
+</section>
+<section id="players" class="level2">
+<h2 class="anchored" data-anchor-id="players">Players</h2>
+<p>Each player in the game should be represented by an object that has the ability to cover that player’s physical abilities, their mental abilities, and their intentions on a current team. Now any player can play any position but each player should have their preferred positions, and a keen coach should be able to spot based on a players physical and mental abilities where they are most likley to have the best impact on a roster.</p>
+<section id="morale" class="level3">
+<h3 class="anchored" data-anchor-id="morale">Morale</h3>
+<p>A player should have a morale system, this morale system should represent how highly the player thinks of himself, the program, his coach, or an individual game. Therefore a player’s morale can be impacted at multiple levels.</p>
+<p><strong>Program Morale</strong> A player’s program morale refers to how highly he thinks of the team he plays for and the school he is at. Based on a players motiviations, the program morale can be effected by things like his grades, his classes, relationships with other players, students, coaches, staff. A player with a high program morale is happy at the proram he is currently at. A player who is happy with the current program he is at is unlikely to leave that program for those purposes.</p>
+<p><strong>Coach Morale</strong> Since our players play as coaches, the coach the player plays as and the relationship the player has with the user coach is represented by this morale. A player with a high coach morale has a good relationship with his coach, he is likely to follow your directions, encourage other players to do so, and react positively in most conversations. A player with a high coach morale is unlikley to want to play for other coaches.</p>
+<p><strong>Game Morale</strong> Each player on a team will have an individual game morale for each game they play. Now the starting position of that morale can be affected by other morale statues. A player with a low program and/or coach morale will likely start a game with a lower game morale. If the player makes a bad play, or his team concedes a touchdown, a player’s game morale will likely reduce. We want to use this system to help show how momentum swings can happen in games. A player with a low game morale is likely to give up on a game and not play their best.</p>
+<p><strong>Individual Morale</strong> A player’s individual morale refers to that player’s belief in their own ability, this can be affected by the mental ability called to confidence ability. When a player makes a good play in a game, or does well in practice, gets good grades, then that player’s individual morale will be good. Players with a high individual morale are more likley to see the best usage of their abilities. Players with a poor individual morale are more likley to see penalties applied to their physical and skill abilities.</p>
+</section>
+<section id="abilities" class="level3">
+<h3 class="anchored" data-anchor-id="abilities">Abilities</h3>
+<p>Abilities are physical, mental, or skills that can be represented by a rating. Physical refers to the player’s physical ability to perform an action, Skills refer to the abilites of a player to perform a “Football action”. Mental abilities represent the players mentality and how his actions he decides to take can be influenced by the world around him.</p>
+<p>Abilities can be represented by a numeric value of 0-99. 0 being the lowest possible rating for any attribute, and 99 being the highest possible rating.</p>
+<p><strong>Physical Abilities</strong></p>
+<p>We should define attributes that make up the physical abilities of a player, these constitute a player’s ability to perform a physical task in the sim world and they are multiplied by the player’s build properties.</p>
+<p><strong>Build Properties &amp; Build Profile</strong></p>
+<p>A player’s build properties correspond to the player’s height, weight, and body type.</p>
+<p>The reason we multiply the attributes by the build property is because we want to show that a player’s build has an affect on their physical ability, ergo, a player with a build profile (a build profile being the build properties brought together) of Height of 6’2” and a weight of 190 with a body type of Lean, and let’s say we had a physical ability “speed” which defines the players top speed.</p>
+<p>Well we would derive some constant n from the player’s physical profile and we would multiply it by the attribute to find that players top speed in the game engine. Each physical ability will likely need some unique formula, or some basic formula to determine a physics based context for what physical actions are possible for a player in the game world.</p>
+<p>For example a 5’9”, 185, fat player with 21 speed, and 19 acceleration is certainly slower than a 6’0”, 175, lean player who has 21 speed and 19 acceleration.</p>
+<p><strong>Therefore a player’s physical ability is a rating that refers to</strong> his ability to perform a common physical task and can be used as a measure to determine generally how good a player is at performing that physical task.</p>
+<p><strong>A players build profile is a multiplier derived from his physical frame, height, weight, arm span, leg length,</strong> etc. to determine multipliers against his physical attributes.</p>
+<p><strong>Skill Abilities</strong></p>
+<p>Each player should have some set of skill abilities that represent their ability to perform the specific functions needed on a football field during a football game.</p>
+<p><strong>Mental Abilities</strong></p>
+<p>Each player should have certain mentail abilities represented by ratings that can serve as representations of the players “likehood” to be affected and in what ways by specific aspects of the game.</p>
+<p>Let’s say a player has a Willpower rating of 54, let’s also say that the player’s Game morale is 55/100. In the event that his team gives up an interception, and that he’s been on the field and is fatigued, his will power rating can serve as a negative multipler when his game morale is said to be in a positive position 60 or greater, or a negative multiplier when his Game morale is in a negative position. 40 or under.</p>
+</section>
+<section id="status-ratings" class="level3">
+<h3 class="anchored" data-anchor-id="status-ratings">Status Ratings</h3>
+</section>
+<section id="list-of-abilities-and-their-effects." class="level3">
+<h3 class="anchored" data-anchor-id="list-of-abilities-and-their-effects.">List of Abilities and Their effects.</h3>
+<p><strong>Physical Abilities</strong> - Speed: The top speed of a player. This value represents the maximum possible speed this player can reach. It is affected by his fatigue status. - Acceleration: The players ability to affect his movement vector in a single direction. Each player in the game engine has his movement represented by a vector. Now that vector has a direction and velocity associated with it. A player with high acceleration has a higher total capability to increase or decrease that movement vector’s velocity with resepect to a single direction. - Agility: Where acceleration represents the ability to change the velocity of movement with respect to one direction, the agility rating shows how quickly and effectiently the player can change the DIRECTION of that movement vector rather than the velocity. - Jumping: The players ability to physically leave the ground, what is the maximum height that they can achieve in their jump. - Strength: A player’s maximum ability to resist an opposing movement vector in any instance. - Endurance: The player’s ability to not be affected by a fatigue status. A fatigue status serves as a negative multipler across all physical abilities. - Reflexes: A player’s ability to react to an event at a certain speed. A high reflex rating allows a player to react quickly to an in-game physical event quicker than other players. - Coordination: A player’s precision to affect their movement vector, and/or hands in reaction to an event. - Balance: A player’s ability to remain upgright once their physical position is affected.</p>
+<p><strong>Skill Abilities</strong></p>
+<p><strong>Throwing Attributes</strong> - Throw Power: The ability to generate a velocity vector on the ball when held in a throwing position. - Throw Precision: The ability of a player to place the ball in the ideal catch radius of a player. - Throw IQ: The knowledge of a player’s ability to know where to attempt to place a throw in order to have the closest delivery to the idea catch radius of a player. - Throw Release: The ability of a player to quickly release a full potential throw. A player with a high throw release rating can generate all of their possible power, accuracy and precision quicker than a player with a lower throw release rating.</p>
+<p><strong>Blocking Attributes</strong> - Chop-Block: The ability of a player to correctly time and perform a chop block blocking technique. Only legally performed within 3 yards of the line of scrimmage, A lineman will block down lown with his shoulders and arms attempting to take the defender’s legs out from underneath him. - Cut-off Block: Generally used on running plays, this is the ability of a player to block a player who is running freely in the open, also known as an angle block because the blocker will typically hit the opposing player from the side or from an angle. - Drive-block: Usually a 1:1 blocking technique where our blocking player and opposing player are lined up directly over one another. - Man-On-Blocking: A blocker’s ability to perform blocking in the open field against a player he is lined up against. - Reach-block: A block in which the blocking player must reach for the defender, this typically means the player reaching is not blocking with their physical body but just their arm. - Zone block: The ability of a player to block a specific area or zone. - Blocking IQ: The ability of a player to know what type of block to use in a specific situation.</p>
+<p><strong>Rushing Attributes</strong> <a href="https://dlineexamples.substack.com/p/pass-rush-moves-handbook">I found the rushing styles from this blog here</a> it also kindly includes gifs of each rushing technique!</p>
+<p>These are typically edge rushing techniques: - Speed-Bull: the ability of a player to perform a Speed bull rush technique, effective against patient blockers who don’t “shoot their hands” - Ghost-Rush: Effective against blockers that punch high and are aggressive - Stutter-Bull: Effective against blockers who are poor against inside moves. - Chop-Spin: Effective against blockers who turn their hips eagerly. - Bull-Slip: Effective against blockers who are patient with their hands and won’t easily punch.</p>
+<p>Interior Rushing Techniques: - Chop-Club: Effective against aggressive blockers who have a tedency to turn their hips. - Cross-Chop Effective against agressive blockers who punch low with their hands. - Couter-Club: Effective against blockers who agressively punch. - Pull-Slide: Effective against blockers who are passive and don’t shoot their hands.</p>
+<ul>
+<li>Rushing-IQ: The ability of a player to select the right rushing technique given a blocking event.</li>
+</ul>
+<p><strong>Ball-Carrier Attributes</strong></p>
+<p>A ball carrier is anyone with the ball in their hands, could be a QB, RB, or a DT who just intercepted the worst pass you’ve ever seen.</p>
+<ul>
+<li>Ball-Security: The ability of the player to protect the football and hold onto it.</li>
+<li>Stiff-Arm: The ability of the player to correctly place their arm on an oncoming tackler, still affected by strength and oncoming attackers force vector.</li>
+<li>Hurdle: The ability of a ball-carrier to read and correctly time a jump over a player attempting to tackle them.</li>
+<li>Field-Vision: The ability of a player to know where other players are at on the field.</li>
+<li></li>
+</ul>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
-    // Ensure there is a toggle, if there isn't float one in the top right
-    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
-      const i = window.document.createElement("i");
-      i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
-    }
-    setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
     const anchorJS = new window.AnchorJS();
     anchorJS.options = {
@@ -926,32 +674,9 @@ ul.task-list li input[type="checkbox"] {
     }
   });
   </script>
-<nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-  </div>
-  <div class="nav-page nav-page-next">
-      <a href="./architecture.html" class="pagination-link" aria-label="Architecture">
-        <span class="nav-page-text">Architecture</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
-  </div>
-</nav>
 </div> <!-- /content -->
-<footer class="footer">
-  <div class="nav-footer">
-    <div class="nav-footer-left">
-      &nbsp;
-    </div>   
-    <div class="nav-footer-center">
-<p>College Football Simulator — design docs · built with Quarto</p>
-</div>
-    <div class="nav-footer-right">
-      &nbsp;
-    </div>
-  </div>
-</footer>
 
 
 
 
-<script src="site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>
